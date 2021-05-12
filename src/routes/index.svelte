@@ -8,8 +8,8 @@ img {
 </style>
 
 <script>
-	const NUM_IMAGES = 73;
-	const randomImage=Math.floor(Math.random() * NUM_IMAGES);
+	import { NUM_IMAGES } from '../constants';
+	const randomImage=Math.floor(Math.random() * NUM_IMAGES-1);
 	const imageUrl = `CouplePictures/${randomImage}.jpg`;
 </script>
 
