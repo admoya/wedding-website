@@ -1,6 +1,6 @@
 CURRENT=0
-for i in static/CouplePictures/*
+for i in static/CroppedCouplePictures/*
 do
-    mv -- "$i" "static/CouplePictures/${CURRENT}.jpg"
+    mv -- "$i" "static/CroppedCouplePictures/${CURRENT}.jpg"
     ((CURRENT+=1))
 done
