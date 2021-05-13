@@ -1,3 +1,4 @@
+mkdir -p static/blog-posts
 for i in blog-posts/*
 do
     marked "${i}" -o "static/${i}"
