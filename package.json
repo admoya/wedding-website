@@ -1,6 +1,6 @@
 {
-  "name": "TODO",
-  "description": "TODO",
+  "name": "moya-wedding-website",
+  "description": "Adrian and Jenny's official wedding website",
   "version": "0.0.1",
   "scripts": {
     "dev": "sapper dev",
