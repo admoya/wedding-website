@@ -5,8 +5,10 @@
 		const res = await this.fetch(`updates/${params.slug}.json`);
 		const data = await res.json();
 
+		const content = await this.fetch(`blog-posts/${params.slug}.html`).then(res => res.text());
+
 		if (res.status === 200) {
-			return { post: data };
+			return { post: {...data, content} };
 		} else {
 			this.error(res.status, data.message);
 		}
@@ -60,5 +62,5 @@
 <h1>{post.title}</h1>
 
 <div class="content">
-	{@html post.html}
+	{@html post.content}
 </div>

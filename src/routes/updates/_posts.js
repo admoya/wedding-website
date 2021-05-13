@@ -10,17 +10,12 @@
 const posts = [
 	{
 		title: 'How to RSVP',
-		slug: 'how-to-rsvp',
-		html: `
-			<p>This website is going to be updated with some cool new features as soon as Adrian stops being lazy!</p>
-			<p>One of those features is going to be the ability to RSVP from right here. Your <i>official</i> wedding invitation will have the (simple) instructions on it.</p>
-			<p>Check back soon, and feel free to nag Adrian about it!</p>
-		`
+		slug: 'how-to-rsvp'
 	},
 ];
 
-posts.forEach(post => {
-	post.html = post.html.replace(/^\t{3}/gm, '');
-});
+// posts.forEach(post => {
+// 	post.html = post.html.replace(/^\t{3}/gm, '');
+// });
 
 export default posts;
