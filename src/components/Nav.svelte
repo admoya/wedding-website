@@ -81,9 +81,7 @@ import { select_multiple_value } from "svelte/internal";
 			<ul class="navbar-nav mr-auto">
 				<li class="nav-item"><a class="nav-link" aria-current="{segment === undefined ? 'page' : undefined}" href=".">home</a></li>
 				<li class="nav-item"><a class="nav-link" aria-current="{segment === 'event' ? 'page' : undefined}" href="event">event</a></li>
-
-				<!-- for the blog link, we're using rel=prefetch so that Sapper prefetches
-					the blog data when we hover over the link or tap it on a touchscreen -->
+				<li class="nav-item"><a class="nav-link" aria-current="{segment === 'gallery' ? 'page' : undefined}" href="gallery">gallery</a></li>
 				<li class="nav-item"><a class="nav-link" rel=prefetch aria-current="{segment === 'updates' ? 'page' : undefined}" href="updates">updates</a></li>
 			</ul>
 		</div>

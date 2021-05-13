@@ -15,8 +15,7 @@ img {
 	import { NUM_IMAGES } from '../constants';
 	const randomImage=Math.floor(Math.random() * NUM_IMAGES-1);
 	const imageUrl = `CroppedCouplePictures/${randomImage}.jpg`;
-	// Start from a random image, then cycle sequentially
-	const imageURIs = Array(NUM_IMAGES).fill().map((_, index) => `CroppedCouplePictures/${index}.jpg`)
+	const imageURIs = Array(NUM_IMAGES).fill().map((_, index) => `CroppedCouplePictures/${index}.jpg`);
 </script>
 
 <svelte:head>
