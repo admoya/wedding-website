@@ -7,10 +7,11 @@ const contents = JSON.stringify(posts.map(post => {
 	};
 }));
 
-export function get(req, res) {
-	res.writeHead(200, {
-		'Content-Type': 'application/json'
-	});
-
-	res.end(contents);
+export function get() {
+	return {
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: contents
+	}
 }
