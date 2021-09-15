@@ -475,8 +475,8 @@ var Headers = class extends URLSearchParams {
     let result = [];
     if (init2 instanceof Headers) {
       const raw = init2.raw();
-      for (const [name, values] of Object.entries(raw)) {
-        result.push(...values.map((value) => [name, value]));
+      for (const [name, values2] of Object.entries(raw)) {
+        result.push(...values2.map((value) => [name, value]));
       }
     } else if (init2 == null)
       ;
@@ -544,11 +544,11 @@ var Headers = class extends URLSearchParams {
     return Object.prototype.toString.call(this);
   }
   get(name) {
-    const values = this.getAll(name);
-    if (values.length === 0) {
+    const values2 = this.getAll(name);
+    if (values2.length === 0) {
       return null;
     }
-    let value = values.join(", ");
+    let value = values2.join(", ");
     if (/^content-encoding$/i.test(name)) {
       value = value.toLowerCase();
     }
@@ -580,11 +580,11 @@ var Headers = class extends URLSearchParams {
   }
   [Symbol.for("nodejs.util.inspect.custom")]() {
     return [...this.keys()].reduce((result, key) => {
-      const values = this.getAll(key);
+      const values2 = this.getAll(key);
       if (key === "host") {
-        result[key] = values[0];
+        result[key] = values2[0];
       } else {
-        result[key] = values.length > 1 ? values : values[0];
+        result[key] = values2.length > 1 ? values2 : values2[0];
       }
       return result;
     }, {});
@@ -1047,6 +1047,9 @@ function get_single_valued_header(headers, key) {
     return value[0];
   }
   return value;
+}
+function coalesce_to_error(err) {
+  return err instanceof Error || err && err.name && err.message ? err : new Error(JSON.stringify(err));
 }
 function lowercase_keys(obj) {
   const clone2 = {};
@@ -1529,7 +1532,7 @@ function try_serialize(data, fail) {
     return devalue(data);
   } catch (err) {
     if (fail)
-      fail(err);
+      fail(coalesce_to_error(err));
     return null;
   }
 }
@@ -1604,6 +1607,7 @@ async function load_node({
   const { module: module2 } = node;
   let uses_credentials = false;
   const fetched = [];
+  let set_cookie_headers = [];
   let loaded;
   const page_proxy = new Proxy(page2, {
     get: (target, prop, receiver) => {
@@ -1709,8 +1713,11 @@ async function load_node({
                 const body = await response2.text();
                 const headers = {};
                 for (const [key2, value] of response2.headers) {
-                  if (key2 !== "etag" && key2 !== "set-cookie")
+                  if (key2 === "set-cookie") {
+                    set_cookie_headers = set_cookie_headers.concat(value);
+                  } else if (key2 !== "etag") {
                     headers[key2] = value;
+                  }
                 }
                 if (!opts.body || typeof opts.body === "string") {
                   fetched.push({
@@ -1758,6 +1765,7 @@ async function load_node({
     loaded: normalize(loaded),
     context: loaded.context || context,
     fetched,
+    set_cookie_headers,
     uses_credentials
   };
 }
@@ -1819,9 +1827,6 @@ function resolve(base2, path) {
   }
   const prefix = path_match && path_match[0] || base_match && base_match[0] || "";
   return `${prefix}${baseparts.join("/")}`;
-}
-function coalesce_to_error(err) {
-  return err instanceof Error ? err : new Error(JSON.stringify(err));
 }
 async function respond_with_error({ request, options: options2, state, $session, status, error: error2 }) {
   const default_layout = await options2.load_component(options2.manifest.layout);
@@ -1919,6 +1924,7 @@ async function respond$1(opts) {
   let branch = [];
   let status = 200;
   let error2;
+  let set_cookie_headers = [];
   ssr:
     if (page_config.ssr) {
       let context = {};
@@ -1937,13 +1943,14 @@ async function respond$1(opts) {
             });
             if (!loaded)
               return;
+            set_cookie_headers = set_cookie_headers.concat(loaded.set_cookie_headers);
             if (loaded.loaded.redirect) {
-              return {
+              return with_cookies({
                 status: loaded.loaded.status,
                 headers: {
                   location: encodeURI(loaded.loaded.redirect)
                 }
-              };
+              }, set_cookie_headers);
             }
             if (loaded.loaded.error) {
               ({ status, error: error2 } = loaded.loaded);
@@ -1990,14 +1997,14 @@ async function respond$1(opts) {
                 }
               }
             }
-            return await respond_with_error({
+            return with_cookies(await respond_with_error({
               request,
               options: options2,
               state,
               $session,
               status,
               error: error2
-            });
+            }), set_cookie_headers);
           }
         }
         if (loaded && loaded.loaded.context) {
@@ -2009,21 +2016,21 @@ async function respond$1(opts) {
       }
     }
   try {
-    return await render_response({
+    return with_cookies(await render_response({
       ...opts,
       page_config,
       status,
       error: error2,
       branch: branch.filter(Boolean)
-    });
+    }), set_cookie_headers);
   } catch (err) {
     const error3 = coalesce_to_error(err);
     options2.handle_error(error3, request);
-    return await respond_with_error({
+    return with_cookies(await respond_with_error({
       ...opts,
       status: 500,
       error: error3
-    });
+    }), set_cookie_headers);
   }
 }
 function get_page_config(leaf, options2) {
@@ -2032,6 +2039,12 @@ function get_page_config(leaf, options2) {
     router: "router" in leaf ? !!leaf.router : options2.router,
     hydrate: "hydrate" in leaf ? !!leaf.hydrate : options2.hydrate
   };
+}
+function with_cookies(response, set_cookie_headers) {
+  if (set_cookie_headers.length) {
+    response.headers["set-cookie"] = set_cookie_headers;
+  }
+  return response;
 }
 async function render_page(request, route, match, options2, state) {
   if (state.initiator === route) {
@@ -2293,16 +2306,13 @@ function subscribe(store, ...callbacks) {
   const unsub = store.subscribe(...callbacks);
   return unsub.unsubscribe ? () => unsub.unsubscribe() : unsub;
 }
-function compute_rest_props(props, keys) {
+function compute_rest_props(props, keys2) {
   const rest = {};
-  keys = new Set(keys);
+  keys2 = new Set(keys2);
   for (const k in props)
-    if (!keys.has(k) && k[0] !== "$")
+    if (!keys2.has(k) && k[0] !== "$")
       rest[k] = props[k];
   return rest;
-}
-function null_to_empty(value) {
-  return value == null ? "" : value;
 }
 function custom_event(type, detail, bubbles = false) {
   const e = document.createEvent("CustomEvent");
@@ -2535,9 +2545,9 @@ function init(settings = default_settings) {
     amp: false,
     dev: false,
     entry: {
-      file: assets + "/_app/start-abd9e379.js",
+      file: assets + "/_app/start-18dc0e0b.js",
       css: [assets + "/_app/assets/start-61d1577b.css", assets + "/_app/assets/vendor-cf063f61.css"],
-      js: [assets + "/_app/start-abd9e379.js", assets + "/_app/chunks/vendor-71a59747.js"]
+      js: [assets + "/_app/start-18dc0e0b.js", assets + "/_app/chunks/vendor-2bd6a93d.js", assets + "/_app/chunks/preload-helper-ec9aa979.js"]
     },
     fetched: void 0,
     floc: false,
@@ -2673,7 +2683,7 @@ var module_lookup = {
     return _id_;
   })
 };
-var metadata_lookup = { "src/routes/__layout.svelte": { "entry": "pages/__layout.svelte-f9e281ff.js", "css": ["assets/pages/__layout.svelte-c3bbed1f.css", "assets/vendor-cf063f61.css"], "js": ["pages/__layout.svelte-f9e281ff.js", "chunks/vendor-71a59747.js"], "styles": [] }, ".svelte-kit/build/components/error.svelte": { "entry": "error.svelte-465afffc.js", "css": ["assets/vendor-cf063f61.css"], "js": ["error.svelte-465afffc.js", "chunks/vendor-71a59747.js"], "styles": [] }, "src/routes/index.svelte": { "entry": "pages/index.svelte-1f0aa46d.js", "css": ["assets/pages/index.svelte-2f5442a3.css", "assets/vendor-cf063f61.css"], "js": ["pages/index.svelte-1f0aa46d.js", "chunks/vendor-71a59747.js", "chunks/constants-cb8a62f7.js"], "styles": [] }, "src/routes/gallery.svelte": { "entry": "pages/gallery.svelte-53eb7e4d.js", "css": ["assets/pages/gallery.svelte-622eb4c1.css", "assets/vendor-cf063f61.css"], "js": ["pages/gallery.svelte-53eb7e4d.js", "chunks/vendor-71a59747.js", "chunks/constants-cb8a62f7.js"], "styles": [] }, "src/routes/updates/index.svelte": { "entry": "pages/updates/index.svelte-c8e425a3.js", "css": ["assets/pages/updates/index.svelte-9532fd46.css", "assets/vendor-cf063f61.css"], "js": ["pages/updates/index.svelte-c8e425a3.js", "chunks/vendor-71a59747.js"], "styles": [] }, "src/routes/updates/[slug].svelte": { "entry": "pages/updates/[slug].svelte-35e41736.js", "css": ["assets/pages/updates/[slug].svelte-2f716ab0.css", "assets/vendor-cf063f61.css"], "js": ["pages/updates/[slug].svelte-35e41736.js", "chunks/vendor-71a59747.js"], "styles": [] }, "src/routes/event.svelte": { "entry": "pages/event.svelte-1adbc155.js", "css": ["assets/pages/event.svelte-b5e07ef6.css", "assets/vendor-cf063f61.css"], "js": ["pages/event.svelte-1adbc155.js", "chunks/vendor-71a59747.js"], "styles": [] }, "src/routes/rsvp/index.svelte": { "entry": "pages/rsvp/index.svelte-cab3e26f.js", "css": ["assets/vendor-cf063f61.css"], "js": ["pages/rsvp/index.svelte-cab3e26f.js", "chunks/vendor-71a59747.js"], "styles": [] }, "src/routes/rsvp/[id].svelte": { "entry": "pages/rsvp/[id].svelte-71e56ee1.js", "css": ["assets/pages/rsvp/[id].svelte-b90cd8ac.css", "assets/vendor-cf063f61.css"], "js": ["pages/rsvp/[id].svelte-71e56ee1.js", "chunks/vendor-71a59747.js"], "styles": [] } };
+var metadata_lookup = { "src/routes/__layout.svelte": { "entry": "pages/__layout.svelte-7e6aadd5.js", "css": ["assets/pages/__layout.svelte-c3bbed1f.css", "assets/vendor-cf063f61.css"], "js": ["pages/__layout.svelte-7e6aadd5.js", "chunks/vendor-2bd6a93d.js"], "styles": [] }, ".svelte-kit/build/components/error.svelte": { "entry": "error.svelte-51e6f2a0.js", "css": ["assets/vendor-cf063f61.css"], "js": ["error.svelte-51e6f2a0.js", "chunks/vendor-2bd6a93d.js"], "styles": [] }, "src/routes/index.svelte": { "entry": "pages/index.svelte-6847b1bb.js", "css": ["assets/pages/index.svelte-702b6c20.css", "assets/vendor-cf063f61.css"], "js": ["pages/index.svelte-6847b1bb.js", "chunks/preload-helper-ec9aa979.js", "chunks/vendor-2bd6a93d.js", "chunks/constants-cb8a62f7.js"], "styles": [] }, "src/routes/gallery.svelte": { "entry": "pages/gallery.svelte-b26fe753.js", "css": ["assets/pages/gallery.svelte-622eb4c1.css", "assets/vendor-cf063f61.css"], "js": ["pages/gallery.svelte-b26fe753.js", "chunks/vendor-2bd6a93d.js", "chunks/constants-cb8a62f7.js"], "styles": [] }, "src/routes/updates/index.svelte": { "entry": "pages/updates/index.svelte-d2a10eb5.js", "css": ["assets/pages/updates/index.svelte-9532fd46.css", "assets/vendor-cf063f61.css"], "js": ["pages/updates/index.svelte-d2a10eb5.js", "chunks/vendor-2bd6a93d.js"], "styles": [] }, "src/routes/updates/[slug].svelte": { "entry": "pages/updates/[slug].svelte-2f04c3d5.js", "css": ["assets/pages/updates/[slug].svelte-2f716ab0.css", "assets/vendor-cf063f61.css"], "js": ["pages/updates/[slug].svelte-2f04c3d5.js", "chunks/vendor-2bd6a93d.js"], "styles": [] }, "src/routes/event.svelte": { "entry": "pages/event.svelte-0c95a64f.js", "css": ["assets/pages/event.svelte-b5e07ef6.css", "assets/vendor-cf063f61.css"], "js": ["pages/event.svelte-0c95a64f.js", "chunks/vendor-2bd6a93d.js"], "styles": [] }, "src/routes/rsvp/index.svelte": { "entry": "pages/rsvp/index.svelte-cb53a1b8.js", "css": ["assets/vendor-cf063f61.css"], "js": ["pages/rsvp/index.svelte-cb53a1b8.js", "chunks/vendor-2bd6a93d.js"], "styles": [] }, "src/routes/rsvp/[id].svelte": { "entry": "pages/rsvp/[id].svelte-d642e6ff.js", "css": ["assets/pages/rsvp/[id].svelte-b90cd8ac.css", "assets/vendor-cf063f61.css"], "js": ["pages/rsvp/[id].svelte-d642e6ff.js", "chunks/vendor-2bd6a93d.js"], "styles": [] } };
 async function load_component(file) {
   const { entry, css: css2, js, styles } = metadata_lookup[file];
   return {
@@ -2830,6 +2840,295 @@ var error = /* @__PURE__ */ Object.freeze({
   load: load$3
 });
 var NUM_IMAGES = 66;
+var freeGlobal = typeof global == "object" && global && global.Object === Object && global;
+var freeGlobal$1 = freeGlobal;
+var freeSelf = typeof self == "object" && self && self.Object === Object && self;
+var root = freeGlobal$1 || freeSelf || Function("return this")();
+var root$1 = root;
+var Symbol$1 = root$1.Symbol;
+var Symbol$2 = Symbol$1;
+var objectProto$5 = Object.prototype;
+var hasOwnProperty$3 = objectProto$5.hasOwnProperty;
+var nativeObjectToString$1 = objectProto$5.toString;
+var symToStringTag$1 = Symbol$2 ? Symbol$2.toStringTag : void 0;
+function getRawTag(value) {
+  var isOwn = hasOwnProperty$3.call(value, symToStringTag$1), tag = value[symToStringTag$1];
+  try {
+    value[symToStringTag$1] = void 0;
+    var unmasked = true;
+  } catch (e) {
+  }
+  var result = nativeObjectToString$1.call(value);
+  if (unmasked) {
+    if (isOwn) {
+      value[symToStringTag$1] = tag;
+    } else {
+      delete value[symToStringTag$1];
+    }
+  }
+  return result;
+}
+var objectProto$4 = Object.prototype;
+var nativeObjectToString = objectProto$4.toString;
+function objectToString(value) {
+  return nativeObjectToString.call(value);
+}
+var nullTag = "[object Null]";
+var undefinedTag = "[object Undefined]";
+var symToStringTag = Symbol$2 ? Symbol$2.toStringTag : void 0;
+function baseGetTag(value) {
+  if (value == null) {
+    return value === void 0 ? undefinedTag : nullTag;
+  }
+  return symToStringTag && symToStringTag in Object(value) ? getRawTag(value) : objectToString(value);
+}
+function isObjectLike(value) {
+  return value != null && typeof value == "object";
+}
+function arrayMap(array, iteratee) {
+  var index2 = -1, length = array == null ? 0 : array.length, result = Array(length);
+  while (++index2 < length) {
+    result[index2] = iteratee(array[index2], index2, array);
+  }
+  return result;
+}
+var isArray = Array.isArray;
+var isArray$1 = isArray;
+function isObject$1(value) {
+  var type = typeof value;
+  return value != null && (type == "object" || type == "function");
+}
+var asyncTag = "[object AsyncFunction]";
+var funcTag$1 = "[object Function]";
+var genTag = "[object GeneratorFunction]";
+var proxyTag = "[object Proxy]";
+function isFunction(value) {
+  if (!isObject$1(value)) {
+    return false;
+  }
+  var tag = baseGetTag(value);
+  return tag == funcTag$1 || tag == genTag || tag == asyncTag || tag == proxyTag;
+}
+function copyArray(source, array) {
+  var index2 = -1, length = source.length;
+  array || (array = Array(length));
+  while (++index2 < length) {
+    array[index2] = source[index2];
+  }
+  return array;
+}
+var MAX_SAFE_INTEGER$1 = 9007199254740991;
+var reIsUint = /^(?:0|[1-9]\d*)$/;
+function isIndex(value, length) {
+  var type = typeof value;
+  length = length == null ? MAX_SAFE_INTEGER$1 : length;
+  return !!length && (type == "number" || type != "symbol" && reIsUint.test(value)) && (value > -1 && value % 1 == 0 && value < length);
+}
+var MAX_SAFE_INTEGER = 9007199254740991;
+function isLength(value) {
+  return typeof value == "number" && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+}
+function isArrayLike(value) {
+  return value != null && isLength(value.length) && !isFunction(value);
+}
+var objectProto$3 = Object.prototype;
+function isPrototype(value) {
+  var Ctor = value && value.constructor, proto = typeof Ctor == "function" && Ctor.prototype || objectProto$3;
+  return value === proto;
+}
+function baseTimes(n, iteratee) {
+  var index2 = -1, result = Array(n);
+  while (++index2 < n) {
+    result[index2] = iteratee(index2);
+  }
+  return result;
+}
+var argsTag$1 = "[object Arguments]";
+function baseIsArguments(value) {
+  return isObjectLike(value) && baseGetTag(value) == argsTag$1;
+}
+var objectProto$2 = Object.prototype;
+var hasOwnProperty$2 = objectProto$2.hasOwnProperty;
+var propertyIsEnumerable = objectProto$2.propertyIsEnumerable;
+var isArguments = baseIsArguments(function() {
+  return arguments;
+}()) ? baseIsArguments : function(value) {
+  return isObjectLike(value) && hasOwnProperty$2.call(value, "callee") && !propertyIsEnumerable.call(value, "callee");
+};
+var isArguments$1 = isArguments;
+function stubFalse() {
+  return false;
+}
+var freeExports$1 = typeof exports == "object" && exports && !exports.nodeType && exports;
+var freeModule$1 = freeExports$1 && typeof module == "object" && module && !module.nodeType && module;
+var moduleExports$1 = freeModule$1 && freeModule$1.exports === freeExports$1;
+var Buffer2 = moduleExports$1 ? root$1.Buffer : void 0;
+var nativeIsBuffer = Buffer2 ? Buffer2.isBuffer : void 0;
+var isBuffer = nativeIsBuffer || stubFalse;
+var isBuffer$1 = isBuffer;
+var argsTag = "[object Arguments]";
+var arrayTag = "[object Array]";
+var boolTag = "[object Boolean]";
+var dateTag = "[object Date]";
+var errorTag = "[object Error]";
+var funcTag = "[object Function]";
+var mapTag = "[object Map]";
+var numberTag = "[object Number]";
+var objectTag = "[object Object]";
+var regexpTag = "[object RegExp]";
+var setTag = "[object Set]";
+var stringTag = "[object String]";
+var weakMapTag = "[object WeakMap]";
+var arrayBufferTag = "[object ArrayBuffer]";
+var dataViewTag = "[object DataView]";
+var float32Tag = "[object Float32Array]";
+var float64Tag = "[object Float64Array]";
+var int8Tag = "[object Int8Array]";
+var int16Tag = "[object Int16Array]";
+var int32Tag = "[object Int32Array]";
+var uint8Tag = "[object Uint8Array]";
+var uint8ClampedTag = "[object Uint8ClampedArray]";
+var uint16Tag = "[object Uint16Array]";
+var uint32Tag = "[object Uint32Array]";
+var typedArrayTags = {};
+typedArrayTags[float32Tag] = typedArrayTags[float64Tag] = typedArrayTags[int8Tag] = typedArrayTags[int16Tag] = typedArrayTags[int32Tag] = typedArrayTags[uint8Tag] = typedArrayTags[uint8ClampedTag] = typedArrayTags[uint16Tag] = typedArrayTags[uint32Tag] = true;
+typedArrayTags[argsTag] = typedArrayTags[arrayTag] = typedArrayTags[arrayBufferTag] = typedArrayTags[boolTag] = typedArrayTags[dataViewTag] = typedArrayTags[dateTag] = typedArrayTags[errorTag] = typedArrayTags[funcTag] = typedArrayTags[mapTag] = typedArrayTags[numberTag] = typedArrayTags[objectTag] = typedArrayTags[regexpTag] = typedArrayTags[setTag] = typedArrayTags[stringTag] = typedArrayTags[weakMapTag] = false;
+function baseIsTypedArray(value) {
+  return isObjectLike(value) && isLength(value.length) && !!typedArrayTags[baseGetTag(value)];
+}
+function baseUnary(func) {
+  return function(value) {
+    return func(value);
+  };
+}
+var freeExports = typeof exports == "object" && exports && !exports.nodeType && exports;
+var freeModule = freeExports && typeof module == "object" && module && !module.nodeType && module;
+var moduleExports = freeModule && freeModule.exports === freeExports;
+var freeProcess = moduleExports && freeGlobal$1.process;
+var nodeUtil = function() {
+  try {
+    var types2 = freeModule && freeModule.require && freeModule.require("util").types;
+    if (types2) {
+      return types2;
+    }
+    return freeProcess && freeProcess.binding && freeProcess.binding("util");
+  } catch (e) {
+  }
+}();
+var nodeUtil$1 = nodeUtil;
+var nodeIsTypedArray = nodeUtil$1 && nodeUtil$1.isTypedArray;
+var isTypedArray = nodeIsTypedArray ? baseUnary(nodeIsTypedArray) : baseIsTypedArray;
+var isTypedArray$1 = isTypedArray;
+var objectProto$1 = Object.prototype;
+var hasOwnProperty$1 = objectProto$1.hasOwnProperty;
+function arrayLikeKeys(value, inherited) {
+  var isArr = isArray$1(value), isArg = !isArr && isArguments$1(value), isBuff = !isArr && !isArg && isBuffer$1(value), isType = !isArr && !isArg && !isBuff && isTypedArray$1(value), skipIndexes = isArr || isArg || isBuff || isType, result = skipIndexes ? baseTimes(value.length, String) : [], length = result.length;
+  for (var key in value) {
+    if ((inherited || hasOwnProperty$1.call(value, key)) && !(skipIndexes && (key == "length" || isBuff && (key == "offset" || key == "parent") || isType && (key == "buffer" || key == "byteLength" || key == "byteOffset") || isIndex(key, length)))) {
+      result.push(key);
+    }
+  }
+  return result;
+}
+function overArg(func, transform) {
+  return function(arg) {
+    return func(transform(arg));
+  };
+}
+var nativeKeys = overArg(Object.keys, Object);
+var nativeKeys$1 = nativeKeys;
+var objectProto = Object.prototype;
+var hasOwnProperty = objectProto.hasOwnProperty;
+function baseKeys(object) {
+  if (!isPrototype(object)) {
+    return nativeKeys$1(object);
+  }
+  var result = [];
+  for (var key in Object(object)) {
+    if (hasOwnProperty.call(object, key) && key != "constructor") {
+      result.push(key);
+    }
+  }
+  return result;
+}
+function keys(object) {
+  return isArrayLike(object) ? arrayLikeKeys(object) : baseKeys(object);
+}
+function baseValues(object, props) {
+  return arrayMap(props, function(key) {
+    return object[key];
+  });
+}
+function values(object) {
+  return object == null ? [] : baseValues(object, keys(object));
+}
+var nativeFloor = Math.floor;
+var nativeRandom = Math.random;
+function baseRandom(lower, upper) {
+  return lower + nativeFloor(nativeRandom() * (upper - lower + 1));
+}
+function shuffleSelf(array, size) {
+  var index2 = -1, length = array.length, lastIndex = length - 1;
+  size = size === void 0 ? length : size;
+  while (++index2 < size) {
+    var rand = baseRandom(index2, lastIndex), value = array[rand];
+    array[rand] = array[index2];
+    array[index2] = value;
+  }
+  array.length = size;
+  return array;
+}
+function arrayShuffle(array) {
+  return shuffleSelf(copyArray(array));
+}
+function baseShuffle(collection) {
+  return shuffleSelf(values(collection));
+}
+function shuffle(collection) {
+  var func = isArray$1(collection) ? arrayShuffle : baseShuffle;
+  return func(collection);
+}
+var css$6 = {
+  code: "img.svelte-10s4sqa{text-align:center;margin:auto;object-fit:contain}.img-container.svelte-10s4sqa{max-height:560px}",
+  map: `{"version":3,"file":"index.svelte","sources":["index.svelte"],"sourcesContent":["<style>\\nimg {\\n    text-align: center;\\n    margin: auto;\\n    object-fit: contain;\\n}\\n.img-container {\\n    max-height: 560px;\\n}\\n</style>\\n\\n<script>\\n    import { NUM_IMAGES } from '../constants';\\n    import { shuffle } from 'lodash-es';\\n    // Weird stuff below to get svelte-carousel to work on server\\n    import { onMount } from 'svelte';\\n    let Carousel; // for saving Carousel component class\\n    let carousel; // for calling methods of carousel instance\\n    onMount(async () => {\\n    const module = await import('svelte-carousel');\\n    Carousel = module.default;\\n    });\\n\\n    const randomImage=Math.floor(Math.random() * NUM_IMAGES-1);\\n    const imageURIs = shuffle(Array(NUM_IMAGES).fill().map((_, index) => \`CroppedCouplePictures/\${index}.jpg\`));\\n<\/script>\\n\\n<svelte:head>\\n    <title>Adrian & Jenny's Wedding</title>\\n</svelte:head>\\n\\n<h1>Finally!</h1>\\n<p>After 8 years of dating, two years of engagement, and on COVID delay, we are getting married in Novemeber, 2021! We hope you will be available to join us!</p>\\n\\n<svelte:component\\n  this={Carousel}\\n  bind:this={carousel}\\n  autoplay\\n  autoplayDuration={8000}\\n  arrows={false}\\n  dots={false}\\n  swiping={false}\\n  let:loaded\\n>\\n    {#each imageURIs as src, imageIndex (src)}\\n        <div class=\\"img-container\\">\\n            {#if loaded.includes(imageIndex)}\\n                <img src={src} class=\\"d-block w-100 h-100\\" alt={\`\${src} \${imageIndex + 1}\`} />\\n            {/if}\\n        </div>\\n    {/each}\\n</svelte:component>"],"names":[],"mappings":"AACA,GAAG,eAAC,CAAC,AACD,UAAU,CAAE,MAAM,CAClB,MAAM,CAAE,IAAI,CACZ,UAAU,CAAE,OAAO,AACvB,CAAC,AACD,cAAc,eAAC,CAAC,AACZ,UAAU,CAAE,KAAK,AACrB,CAAC"}`
+};
+var Routes = create_ssr_component(($$result, $$props, $$bindings, slots) => {
+  let carousel;
+  const imageURIs = shuffle(Array(NUM_IMAGES).fill().map((_, index2) => `CroppedCouplePictures/${index2}.jpg`));
+  $$result.css.add(css$6);
+  let $$settled;
+  let $$rendered;
+  do {
+    $$settled = true;
+    $$rendered = `${$$result.head += `${$$result.title = `<title>Adrian &amp; Jenny&#39;s Wedding</title>`, ""}`, ""}
+
+<h1>Finally!</h1>
+<p>After 8 years of dating, two years of engagement, and on COVID delay, we are getting married in Novemeber, 2021! We hope you will be available to join us!</p>
+
+${validate_component(missing_component, "svelte:component").$$render($$result, {
+      autoplay: true,
+      autoplayDuration: 8e3,
+      arrows: false,
+      dots: false,
+      swiping: false,
+      this: carousel
+    }, {
+      this: ($$value) => {
+        carousel = $$value;
+        $$settled = false;
+      }
+    }, {
+      default: ({ loaded }) => `${each(imageURIs, (src2, imageIndex) => `<div class="${"img-container svelte-10s4sqa"}">${loaded.includes(imageIndex) ? `<img${add_attribute("src", src2, 0)} class="${"d-block w-100 h-100 svelte-10s4sqa"}"${add_attribute("alt", `${src2} ${imageIndex + 1}`, 0)}>` : ``}
+        </div>`)}`
+    })}`;
+  } while (!$$settled);
+  return $$rendered;
+});
+var index$2 = /* @__PURE__ */ Object.freeze({
+  __proto__: null,
+  [Symbol.toStringTag]: "Module",
+  "default": Routes
+});
 function isObject(value) {
   const type = typeof value;
   return value != null && (type == "object" || type == "function");
@@ -2960,72 +3259,6 @@ var ButtonGroup = create_ssr_component(($$result, $$props, $$bindings, slots) =>
     $$bindings.vertical(vertical);
   classes = classnames(className, size ? `btn-group-${size}` : false, vertical ? "btn-group-vertical" : "btn-group");
   return `<div${spread([escape_object($$restProps), { class: escape_attribute_value(classes) }])}>${slots.default ? slots.default({}) : ``}</div>`;
-});
-var Carousel = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  let $$restProps = compute_rest_props($$props, [
-    "class",
-    "style",
-    "items",
-    "activeIndex",
-    "dark",
-    "ride",
-    "interval",
-    "pause",
-    "keyboard"
-  ]);
-  let classes = "";
-  let { class: className = "" } = $$props;
-  let { style = "" } = $$props;
-  let { items = [] } = $$props;
-  let { activeIndex = 0 } = $$props;
-  let { dark = false } = $$props;
-  let { ride = true } = $$props;
-  let { interval = 5e3 } = $$props;
-  let { pause = true } = $$props;
-  let { keyboard = true } = $$props;
-  onDestroy(() => {
-  });
-  if ($$props.class === void 0 && $$bindings.class && className !== void 0)
-    $$bindings.class(className);
-  if ($$props.style === void 0 && $$bindings.style && style !== void 0)
-    $$bindings.style(style);
-  if ($$props.items === void 0 && $$bindings.items && items !== void 0)
-    $$bindings.items(items);
-  if ($$props.activeIndex === void 0 && $$bindings.activeIndex && activeIndex !== void 0)
-    $$bindings.activeIndex(activeIndex);
-  if ($$props.dark === void 0 && $$bindings.dark && dark !== void 0)
-    $$bindings.dark(dark);
-  if ($$props.ride === void 0 && $$bindings.ride && ride !== void 0)
-    $$bindings.ride(ride);
-  if ($$props.interval === void 0 && $$bindings.interval && interval !== void 0)
-    $$bindings.interval(interval);
-  if ($$props.pause === void 0 && $$bindings.pause && pause !== void 0)
-    $$bindings.pause(pause);
-  if ($$props.keyboard === void 0 && $$bindings.keyboard && keyboard !== void 0)
-    $$bindings.keyboard(keyboard);
-  classes = classnames(className, "carousel", "slide", { "carousel-dark": dark });
-  return `
-
-<div${spread([
-    escape_object($$restProps),
-    { class: escape_attribute_value(classes) },
-    { style: escape_attribute_value(style) }
-  ])}>${slots.default ? slots.default({}) : ``}</div>`;
-});
-var CarouselItem = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  let $$restProps = compute_rest_props($$props, ["class", "itemIndex", "activeIndex"]);
-  let classes = "";
-  let { class: className = "" } = $$props;
-  let { itemIndex = 0 } = $$props;
-  let { activeIndex = 0 } = $$props;
-  if ($$props.class === void 0 && $$bindings.class && className !== void 0)
-    $$bindings.class(className);
-  if ($$props.itemIndex === void 0 && $$bindings.itemIndex && itemIndex !== void 0)
-    $$bindings.itemIndex(itemIndex);
-  if ($$props.activeIndex === void 0 && $$bindings.activeIndex && activeIndex !== void 0)
-    $$bindings.activeIndex(activeIndex);
-  classes = classnames(className, "carousel-item");
-  return `<div${spread([escape_object($$restProps), { class: escape(classes) + " active" }], itemIndex === activeIndex ? "active" : "")}>${slots.default ? slots.default({}) : ``}</div>`;
 });
 var Col = create_ssr_component(($$result, $$props, $$bindings, slots) => {
   let $$restProps = compute_rest_props($$props, ["class", "xs", "sm", "md", "lg", "xl", "xxl"]);
@@ -3799,7 +4032,7 @@ var Portal = create_ssr_component(($$result, $$props, $$bindings, slots) => {
   });
   return `<div${spread([escape_object($$restProps)])}${add_attribute("this", ref, 0)}>${slots.default ? slots.default({}) : ``}</div>`;
 });
-var css$6 = {
+var css$5 = {
   code: ".modal-open{overflow:hidden;padding-right:0}",
   map: `{"version":3,"file":"Modal.svelte","sources":["Modal.svelte"],"sourcesContent":["<script context=\\"module\\">\\n  // TODO fade option\\n  let openCount = 0;\\n<\/script>\\n\\n<script>\\n  import classnames from './utils';\\n  import { browserEvent } from './utils';\\n  import {\\n    createEventDispatcher,\\n    onDestroy,\\n    onMount,\\n    afterUpdate\\n  } from 'svelte';\\n  import { modalIn, modalOut } from './transitions';\\n  import InlineContainer from './InlineContainer.svelte';\\n  import ModalBackdrop from './ModalBackdrop.svelte';\\n  import ModalBody from './ModalBody.svelte';\\n  import ModalHeader from './ModalHeader.svelte';\\n  import Portal from './Portal.svelte';\\n  import {\\n    conditionallyUpdateScrollbar,\\n    getOriginalBodyPadding,\\n    setScrollbarWidth\\n  } from './utils';\\n\\n  const dispatch = createEventDispatcher();\\n\\n  let className = '';\\n  let staticModal = false;\\n  export { className as class };\\n  export { staticModal as static };\\n  export let isOpen = false;\\n  export let autoFocus = true;\\n  export let body = false;\\n  export let centered = false;\\n  export let container = undefined;\\n  export let fullscreen = false;\\n  export let header = undefined;\\n  export let scrollable = false;\\n  export let size = '';\\n  export let toggle = undefined;\\n  export let labelledBy = '';\\n  export let backdrop = true;\\n  export let wrapClassName = '';\\n  export let modalClassName = '';\\n  export let contentClassName = '';\\n  export let fade = true;\\n  export let unmountOnClose = true;\\n  export let returnFocusAfterClose = true;\\n\\n  let hasOpened = false;\\n  let _isMounted = false;\\n  let _triggeringElement;\\n  let _originalBodyPadding;\\n  let _lastIsOpen = isOpen;\\n  let _lastHasOpened = hasOpened;\\n  let _dialog;\\n  let _mouseDownElement;\\n  let _removeEscListener;\\n\\n  onMount(() => {\\n    if (isOpen) {\\n      init();\\n      hasOpened = true;\\n    }\\n\\n    if (hasOpened && autoFocus) {\\n      setFocus();\\n    }\\n  });\\n\\n  onDestroy(() => {\\n    destroy();\\n    if (hasOpened) {\\n      close();\\n    }\\n  });\\n\\n  afterUpdate(() => {\\n    if (isOpen && !_lastIsOpen) {\\n      init();\\n      hasOpened = true;\\n    }\\n\\n    if (autoFocus && hasOpened && !_lastHasOpened) {\\n      setFocus();\\n    }\\n\\n    _lastIsOpen = isOpen;\\n    _lastHasOpened = hasOpened;\\n  });\\n\\n  function setFocus() {\\n    if (\\n      _dialog &&\\n      _dialog.parentNode &&\\n      typeof _dialog.parentNode.focus === 'function'\\n    ) {\\n      _dialog.parentNode.focus();\\n    }\\n  }\\n\\n  function init() {\\n    try {\\n      _triggeringElement = document.activeElement;\\n    } catch (err) {\\n      _triggeringElement = null;\\n    }\\n\\n    if (!staticModal) {\\n      _originalBodyPadding = getOriginalBodyPadding();\\n      conditionallyUpdateScrollbar();\\n      if (openCount === 0) {\\n        document.body.className = classnames(\\n          document.body.className,\\n          'modal-open'\\n        );\\n      }\\n\\n      ++openCount;\\n    }\\n    _isMounted = true;\\n  }\\n\\n  function manageFocusAfterClose() {\\n    if (_triggeringElement) {\\n      if (\\n        typeof _triggeringElement.focus === 'function' &&\\n        returnFocusAfterClose\\n      ) {\\n        _triggeringElement.focus();\\n      }\\n\\n      _triggeringElement = null;\\n    }\\n  }\\n\\n  function destroy() {\\n    manageFocusAfterClose();\\n  }\\n\\n  function close() {\\n    if (openCount <= 1) {\\n      document.body.classList.remove('modal-open');\\n    }\\n\\n    manageFocusAfterClose();\\n    openCount = Math.max(0, openCount - 1);\\n\\n    setScrollbarWidth(_originalBodyPadding);\\n  }\\n\\n  function handleBackdropClick(e) {\\n    if (e.target === _mouseDownElement) {\\n      e.stopPropagation();\\n      if (!isOpen || !backdrop) {\\n        return;\\n      }\\n\\n      const backdropElem = _dialog ? _dialog.parentNode : null;\\n      if (\\n        backdrop === true &&\\n        backdropElem &&\\n        e.target === backdropElem &&\\n        toggle\\n      ) {\\n        toggle(e);\\n      }\\n    }\\n  }\\n\\n  function onModalOpened() {\\n    dispatch('open');\\n    _removeEscListener = browserEvent(document, 'keydown', (event) => {\\n      if (event.key && event.key === 'Escape') {\\n        if (toggle && backdrop === true) toggle(event);\\n      }\\n    });\\n  }\\n\\n  function onModalClosed() {\\n    dispatch('close');\\n    if (_removeEscListener) {\\n      _removeEscListener();\\n    }\\n\\n    if (unmountOnClose) {\\n      destroy();\\n    }\\n    close();\\n    if (_isMounted) {\\n      hasOpened = false;\\n    }\\n    _isMounted = false;\\n  }\\n\\n  function handleBackdropMouseDown(e) {\\n    _mouseDownElement = e.target;\\n  }\\n\\n  const dialogBaseClass = 'modal-dialog';\\n\\n  $: classes = classnames(dialogBaseClass, className, {\\n    [\`modal-\${size}\`]: size,\\n    'modal-fullscreen': fullscreen === true,\\n    [\`modal-fullscreen-\${fullscreen}-down\`]:\\n      fullscreen && typeof fullscreen === 'string',\\n    [\`\${dialogBaseClass}-centered\`]: centered,\\n    [\`\${dialogBaseClass}-scrollable\`]: scrollable\\n  });\\n\\n  $: outer = container === 'inline' || staticModal ? InlineContainer : Portal;\\n<\/script>\\n\\n{#if _isMounted}\\n  <svelte:component this={outer}>\\n    <div class={wrapClassName} tabindex=\\"-1\\" {...$$restProps}>\\n      {#if isOpen}\\n        <div\\n          in:modalIn\\n          out:modalOut\\n          ariaLabelledby={labelledBy}\\n          class={classnames('modal', modalClassName, {\\n            fade,\\n            'position-static': staticModal\\n          })}\\n          role=\\"dialog\\"\\n          on:introstart={() => dispatch('opening')}\\n          on:introend={onModalOpened}\\n          on:outrostart={() => dispatch('closing')}\\n          on:outroend={onModalClosed}\\n          on:click={handleBackdropClick}\\n          on:mousedown={handleBackdropMouseDown}\\n        >\\n          <slot name=\\"external\\" />\\n          <div class={classes} role=\\"document\\" bind:this={_dialog}>\\n            <div class={classnames('modal-content', contentClassName)}>\\n              {#if header}\\n                <ModalHeader {toggle}>\\n                  {header}\\n                </ModalHeader>\\n              {/if}\\n              {#if body}\\n                <ModalBody>\\n                  <slot />\\n                </ModalBody>\\n              {:else}\\n                <slot />\\n              {/if}\\n            </div>\\n          </div>\\n        </div>\\n      {/if}\\n    </div>\\n  </svelte:component>\\n{/if}\\n{#if backdrop && !staticModal}\\n  <svelte:component this={outer}>\\n    <ModalBackdrop {fade} {isOpen} />\\n  </svelte:component>\\n{/if}\\n\\n<style>\\n  :global(.modal-open) {\\n    overflow: hidden;\\n    padding-right: 0;\\n  }\\n</style>\\n"],"names":[],"mappings":"AAwQU,WAAW,AAAE,CAAC,AACpB,QAAQ,CAAE,MAAM,CAChB,aAAa,CAAE,CAAC,AAClB,CAAC"}`
 };
@@ -3891,7 +4124,7 @@ var Modal = create_ssr_component(($$result, $$props, $$bindings, slots) => {
     $$bindings.unmountOnClose(unmountOnClose);
   if ($$props.returnFocusAfterClose === void 0 && $$bindings.returnFocusAfterClose && returnFocusAfterClose !== void 0)
     $$bindings.returnFocusAfterClose(returnFocusAfterClose);
-  $$result.css.add(css$6);
+  $$result.css.add(css$5);
   classnames(dialogBaseClass, className, {
     [`modal-${size}`]: size,
     "modal-fullscreen": fullscreen === true,
@@ -3941,54 +4174,6 @@ var Row = create_ssr_component(($$result, $$props, $$bindings, slots) => {
     $$bindings.cols(cols);
   classes = classnames(className, noGutters ? "gx-0" : null, form ? "form-row" : "row", ...getCols(cols));
   return `<div${spread([escape_object($$restProps), { class: escape_attribute_value(classes) }])}>${slots.default ? slots.default({}) : ``}</div>`;
-});
-var css$5 = {
-  code: "img.svelte-1jxfaa3{text-align:center;width:90%;display:block;margin:auto}.carousel-inner.svelte-1jxfaa3{max-height:560px}",
-  map: '{"version":3,"file":"index.svelte","sources":["index.svelte"],"sourcesContent":["<style>\\nimg {\\n    text-align: center;\\n    width: 90%;\\n    display: block;\\n    margin: auto;\\n}\\n.carousel-inner {\\n    max-height: 560px;\\n}\\n</style>\\n\\n<script>\\n    import { NUM_IMAGES } from \'../constants\';\\n    import { Carousel, CarouselItem } from \'sveltestrap\';\\n    const randomImage=Math.floor(Math.random() * NUM_IMAGES-1);\\n    let activeIndex = randomImage;\\n    const imageURIs = Array(NUM_IMAGES).fill().map((_, index) => `CroppedCouplePictures/${index}.jpg`);\\n<\/script>\\n\\n<svelte:head>\\n    <title>Adrian & Jenny\'s Wedding</title>\\n</svelte:head>\\n\\n<h1>Finally!</h1>\\n<p>After 8 years of dating, two years of engagement, and on COVID delay, we are getting married in Novemeber, 2021! We hope you will be available to join us!</p>\\n\\n<Carousel items={imageURIs} bind:activeIndex pause={false}>\\n    <div class=\\"carousel-inner\\">\\n        {#each imageURIs as item, index}\\n          <CarouselItem bind:activeIndex itemIndex={index}>\\n            <img src={item} class={activeIndex == index ? \\"d-block w-100\\" : \\"d-none\\"} alt={`${item} ${index + 1}`} />\\n          </CarouselItem>\\n        {/each}\\n      </div>\\n</Carousel>\\n\\n<!-- {#if typeof window !== \'undefined\'}\\n<div id=\\"carouselCouplePictures\\" class=\\"carousel slide\\" data-ride=\\"carousel\\" data-interval=\\"7000\\">\\n    <div class=\\"carousel-inner\\">\\n        {#each imageURIs as imgSrc, i}\\n            <div class={`carousel-item ${i == randomImage ? \'active\' : \'\'}`}>\\n                <img class=\\"d-block w-100\\" src={imgSrc} alt={`Slide ${i+1} of the couple pictures carousel`}>\\n            </div>\\n        {/each}\\n    </div>\\n</div>\\n{/if} -->"],"names":[],"mappings":"AACA,GAAG,eAAC,CAAC,AACD,UAAU,CAAE,MAAM,CAClB,KAAK,CAAE,GAAG,CACV,OAAO,CAAE,KAAK,CACd,MAAM,CAAE,IAAI,AAChB,CAAC,AACD,eAAe,eAAC,CAAC,AACb,UAAU,CAAE,KAAK,AACrB,CAAC"}'
-};
-var Routes = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  const randomImage = Math.floor(Math.random() * NUM_IMAGES - 1);
-  let activeIndex = randomImage;
-  const imageURIs = Array(NUM_IMAGES).fill().map((_, index2) => `CroppedCouplePictures/${index2}.jpg`);
-  $$result.css.add(css$5);
-  let $$settled;
-  let $$rendered;
-  do {
-    $$settled = true;
-    $$rendered = `${$$result.head += `${$$result.title = `<title>Adrian &amp; Jenny&#39;s Wedding</title>`, ""}`, ""}
-
-<h1>Finally!</h1>
-<p>After 8 years of dating, two years of engagement, and on COVID delay, we are getting married in Novemeber, 2021! We hope you will be available to join us!</p>
-
-${validate_component(Carousel, "Carousel").$$render($$result, {
-      items: imageURIs,
-      pause: false,
-      activeIndex
-    }, {
-      activeIndex: ($$value) => {
-        activeIndex = $$value;
-        $$settled = false;
-      }
-    }, {
-      default: () => `<div class="${"carousel-inner svelte-1jxfaa3"}">${each(imageURIs, (item, index2) => `${validate_component(CarouselItem, "CarouselItem").$$render($$result, { itemIndex: index2, activeIndex }, {
-        activeIndex: ($$value) => {
-          activeIndex = $$value;
-          $$settled = false;
-        }
-      }, {
-        default: () => `<img${add_attribute("src", item, 0)} class="${escape(null_to_empty(activeIndex == index2 ? "d-block w-100" : "d-none")) + " svelte-1jxfaa3"}"${add_attribute("alt", `${item} ${index2 + 1}`, 0)}>
-          `
-      })}`)}</div>`
-    })}
-
-`;
-  } while (!$$settled);
-  return $$rendered;
-});
-var index$2 = /* @__PURE__ */ Object.freeze({
-  __proto__: null,
-  [Symbol.toStringTag]: "Module",
-  "default": Routes
 });
 var css$4 = {
   code: "@media(min-width: 768px){img.svelte-phggye{object-fit:cover;height:100%;width:100%}}.imageContainer.svelte-phggye{width:20rem!important;max-height:20rem;overflow:hidden;padding-top:1rem;cursor:pointer}.galleryContainer.svelte-phggye{overflow-y:scroll;max-height:60vh;width:80vw;position:absolute;left:50%;margin-left:-40vw}",

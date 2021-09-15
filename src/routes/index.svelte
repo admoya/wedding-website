@@ -11,7 +11,7 @@ img {
 
 <script>
     import { NUM_IMAGES } from '../constants';
-    import shuffle from 'lodash/shuffle';
+    import { shuffle } from 'lodash-es';
     // Weird stuff below to get svelte-carousel to work on server
     import { onMount } from 'svelte';
     let Carousel; // for saving Carousel component class
