@@ -1,8 +1,8 @@
 <script context="module">
-	export function preload() {
-		return this.fetch(`updates.json`).then(r => r.json()).then(posts => {
-			return { posts };
-		});
+	export function load({ fetch }) {
+		return fetch(`updates.json`).then(r => r.json()).then(posts => {
+			return {props: { posts }};
+		}).catch((error) => ({ error }));
 	}
 </script>
 
