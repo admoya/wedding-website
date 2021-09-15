@@ -23,12 +23,17 @@
     }
 </style>
 <script>
+    import { Modal, ModalBody } from 'sveltestrap';
     import { NUM_IMAGES } from '../constants';
     const imageURIs = Array(NUM_IMAGES).fill().map((_, index) => `CroppedCouplePictures/${index}.jpg`);
     let imageSrcForModal = '';
+    let showModal = false;
+    const toggle = () => (showModal = !showModal);
     const handleClick = (imgSrc) => {
         imageSrcForModal=imgSrc;
+        toggle();
     }
+
 </script>
 
 <h1>Gallery</h1>
@@ -40,10 +45,7 @@
     </div>
     {/each}
 </div>
-<div class="modal fade" id="showcaseModal" tabindex="-1" role="dialog" aria-hidden="true" aria-describedby="A modal for enlarging a picture in the gallery">
-    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-        <div class="modal-content">
-            <img class="rounded" src={imageSrcForModal} alt="Adrian and Jenny" />
-        </div>
-    </div>
-</div>
+
+<Modal body isOpen={showModal} size="lg" {toggle} aria-describedby="A modal for enlarging a picture in the gallery">
+    <img class="rounded w-100" src={imageSrcForModal} alt="Adrian and Jenny" />
+</Modal>
