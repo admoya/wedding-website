@@ -1,54 +1,45 @@
 <script context="module">
-    export async function load({ page: {params: { id }} }) {
-        const guests = [
-            {
-                id: '1234',
-                name: 'The Moya Family',
-                seats: [
-                    {
-                        name: 'Migdy Moya'
-                    },
-                    {
-                        name: 'Henry Moya'
-                    },
-                    {
-                        name: ''
-                    }
-                ]
-            },
-            {
-                id: '2345',
-                name: 'The Hernandez Family',
-            },
-            {
-                id: '3456',
-                name: 'The Other Family',
-            },
-        ];
-        const guestGroup = guests.find((g) => id === g.id) || {};
+    export async function load({ page: {params: { id }}, fetch }) {
+        const guestGroup = await (await fetch(`/guests/${id}`)).json();
         return { props: { guestGroup } };
     }
 </script>
 
 <script>
-    import { Form, Label, Container, Col, Row, ButtonGroup, Button, Input, Alert } from 'sveltestrap';
+    import { Form, Label, Container, Col, Row, ButtonGroup, Button, Input, Alert, Card, CardHeader, CardTitle, CardBody } from 'sveltestrap';
+    import { page } from '$app/stores';
+    import GuestCard from './_guestCard.svelte';
+    import { submitGuestChanges } from '../../utils';
     export let guestGroup = {};
+    const { id } = $page.params;
     const { name, seats } = guestGroup;
     let error = '';
-    const onFormSubmit = (e) => {
+    let loading = false;
+    const onFormSubmit = async (e) => {
         e.preventDefault();
         if (guestGroup.attending) {
                 if (seats.find((seat) => !seat.name)) {
                 error = 'Please enter a name for all your guests';
+                document.getElementById('errorAlertAnchor').scrollIntoView({ behavior: 'smooth'});
                 return;
             };
-            if (seats.find((seat) => !seat.food)) {
-                error = 'Please enter a food preference for all your guests';
+            if (seats.find((seat) => seat.attending && !seat.food)) {
+                document.getElementById('errorAlertAnchor').scrollIntoView({ behavior: 'smooth'});
+                error = 'Please enter a food preference for attending guests';
                 return;
             };
         };
+        loading = true;
         error = '';
-        console.log(JSON.stringify(guestGroup, null, 4))
+        try {
+            await submitGuestChanges({...guestGroup, id });
+            window.location.href = '/rsvp/confirmation';
+        } catch (ex) {
+            console.error(ex);
+            error = 'Sorry, something went wrong. Please try again later.';
+        }
+        loading = false;
+
     };
     const onGroupAttending = () =>{
         guestGroup.attending = true;
@@ -68,7 +59,10 @@
 
 <style>
     .rsvp-form {
-        text-align: center
+        text-align: center;
+    }
+    :global(#rsvpSubmitBtn) {
+        background-color: mediumpurple !important;
     }
 </style>
 
@@ -92,43 +86,26 @@
                 <Row>
                     <p>Geat! Please tell us a bit about each guest:</p>
                 </Row>
-                {#if error}
-                    <Row>
-                        <Col size={12}>
-                            <Alert color="danger"><p class="m-0">{error}</p></Alert>
-                        </Col>
-                    </Row>
-                {/if}
+                <div id="errorAlertAnchor">
+                    {#if error}
+                        <Row>
+                            <Col size={12}>
+                                <Alert id='errorAlert' color="danger"><p class="m-0">{error}</p></Alert>
+                            </Col>
+                        </Row>
+                    {/if}
+                </div>
                 {#each seats as seat, i}
-                    <Row>
-                        <Col>
-                            <Label>Guest Name:
-                                <Input invalid={error && !seat.name} feedback="Please enter this guest's name" bind:value={seat.name} placeholder={`Guest #${i+1}`}/>
-                            </Label>
-                        </Col>
-                        <Col>
-                            <Label for="guestAttendanceBtnGroup">Attending?</Label>
-                            <ButtonGroup id="guestAttendanceBtnGroup" role="group" class="w-100">
-                                <Button type="button" outline active={seat.attending} color="primary" on:click={() => (seat.attending = true)}>Yes</Button>
-                                <Button type="button" outline active={seat.attending === false} color="secondary" on:click={() => (seat.attending = false)}>No</Button>
-                            </ButtonGroup>
-                        </Col>
-                        <Col>
-                            <Label for="foodPreferenceBtnGroup">Food Preference:</Label>
-                            <ButtonGroup id="foodPreferenceBtnGroup" role="group" class="w-100">
-                                <Button type="button" disabled={!seat.attending} outline active={seat.food === 'Beef'} color={error && !seat.food ? 'danger' : 'dark'} on:click={() => (seat.food = 'Beef')}>Beef</Button>
-                                <Button type="button" disabled={!seat.attending} outline active={seat.food === 'Chicken'} color={error && !seat.food ? 'danger' : 'dark'} on:click={() => (seat.food = 'Chicken')}>Chicken</Button>
-                                <Button type="button" disabled={!seat.attending} outline active={seat.food === 'Vegitarian'} color={error && !seat.food ? 'danger' : 'dark'} on:click={() => (seat.food = 'Vegitarian')}>Vegitarian</Button>
-                            </ButtonGroup>
-                        </Col>
-                    </Row>
+                    <GuestCard bind:seat {error} index={i} />
                 {/each}
                 {:else}
                     <Row>
                         <p>We're sorry to hear that! Click the button below to let us know.</p>
                     </Row>
                 {/if}
-                <Button color="light" class="mt-1">Submit</Button>
+                <Row>
+                    <Button disabled={loading} id="rsvpSubmitBtn">Submit</Button>
+                </Row>
             {/if}
 
 

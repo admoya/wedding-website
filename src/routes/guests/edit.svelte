@@ -1,0 +1,31 @@
+<script context="module">
+    import { getFullGuestList } from '../../utils';
+    export async function load({ fetch }) {
+        return { props: { guests: await getFullGuestList({fetch}) } }
+    }
+</script>
+
+<script>
+    export let guests;
+    let remoteGuests = cloneDeep(guests);
+    import { cloneDeep } from 'lodash-es';
+    import GuestCard from './_guestCard.svelte';
+    const refreshRemote = async () => {
+        remoteGuests = await getFullGuestList({fetch});
+    };
+    const refreshAll = async () => {
+        guests = await getFullGuestList({fetch});
+        remoteGuests = cloneDeep(guests);
+    }
+</script>
+
+
+<h1>Edit Guest Data</h1>
+<button on:click={refreshAll}>Refresh</button>
+<button on:click={() => {
+    console.log(JSON.stringify(guests, null, 4));
+    console.log(JSON.stringify(remoteGuests, null, 4));
+}}>Debug</button>
+{#each guests as guest, index}
+    <GuestCard {guest} {index} {refreshRemote} {remoteGuests} />
+{/each}

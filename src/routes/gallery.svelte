@@ -14,8 +14,6 @@
         cursor: pointer;
     }
     .galleryContainer {
-        overflow-y: scroll;
-        max-height: 60vh;
         width: 80vw;
         position: absolute;
         left: 50%;

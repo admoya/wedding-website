@@ -72,10 +72,10 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav mr-auto">
-                <li class="nav-item"><a class="nav-link" aria-current="{path === '/' ? 'page' : undefined}" href=".">home</a></li>
-                <li class="nav-item"><a class="nav-link" aria-current="{path.includes('event') ? 'page' : undefined}" href="event">event</a></li>
-                <li class="nav-item"><a class="nav-link" aria-current="{path.includes('gallery') ? 'page' : undefined}" href="gallery">gallery</a></li>
-                <li class="nav-item"><a class="nav-link" rel=prefetch aria-current="{path.includes('updates') ? 'page' : undefined}" href="updates">updates</a></li>
+                <li class="nav-item"><a class="nav-link" aria-current="{path === '/' ? 'page' : undefined}" href="/">home</a></li>
+                <li class="nav-item"><a class="nav-link" aria-current="{path.includes('event') ? 'page' : undefined}" href="/event">event</a></li>
+                <li class="nav-item"><a class="nav-link" aria-current="{path.includes('gallery') ? 'page' : undefined}" href="/gallery">gallery</a></li>
+                <li class="nav-item"><a class="nav-link" rel=prefetch aria-current="{path.includes('updates') ? 'page' : undefined}" href="/updates">updates</a></li>
             </ul>
         </div>
         <h3 class="headerMessage navbar-brand mx-auto">Adrian + Jenny · 11.13.21</h3>

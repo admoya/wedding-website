@@ -30,7 +30,7 @@ img {
 </svelte:head>
 
 <h1>Finally!</h1>
-<p>After 8 years of dating, two years of engagement, and on COVID delay, we are getting married in Novemeber, 2021! We hope you will be available to join us!</p>
+<p>After 8 years of dating, two years of engagement, and one COVID delay, we are getting married in Novemeber, 2021! We hope you will be available to join us!</p>
 
 <svelte:component
   this={Carousel}
