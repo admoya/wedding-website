@@ -16,10 +16,26 @@
 		background-repeat: no-repeat;
     	background-size: cover;
 	}
+	.mainContentScrollWrapper {
+		flex-grow: 1;
+		overflow-y: auto;
+		width: 100vw;
+		max-width: 100vw;
+		scroll-behavior: smooth;
+	}
+	.pageWrapper {
+		display: flex;
+		flex-direction: column;
+		height: 100vh;
+	}
 </style>
 
-<Nav path={$page.path}/>
+<div class="pageWrapper">
+	<Nav path={$page.path}/>
+	<div class='mainContentScrollWrapper'>
+		<main>
+			<slot></slot>
+		</main>
+	</div>
+</div>
 
-<main>
-	<slot></slot>
-</main>

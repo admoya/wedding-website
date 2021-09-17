@@ -1,19 +1,16 @@
+<script context="module">
+    export async function load({ fetch }) {
+        const guestsObj = await (await fetch('/guests')).json();
+        const guestArr = Object.entries(guestsObj).reduce((acc, [id, val]) => {
+            return [...acc, { id, ...val}]
+        }, []);
+        return { props: { guests: guestArr } };
+    }
+</script>
+
 <script>
+    export let guests;
     import { Input, Label, ListGroup, ListGroupItem } from 'sveltestrap';
-    const guests = [
-        {
-            id: '1234',
-            name: 'The Moya Family',
-        },
-        {
-            id: '2345',
-            name: 'The Hernandez Family',
-        },
-        {
-            id: '3456',
-            name: 'The Other Family',
-        },
-    ];
     let search = '';
     $: matchedGuests = guests.filter(({id, name}) => {
         return id.includes(search) || name.toLowerCase().includes(search.toLowerCase());
