@@ -28,7 +28,7 @@
     let loading = false;
     const submitGuest = async (guest) => {
         loading = true;
-        await submitGuestChanges();
+        await submitGuestChanges(guest);
         await refreshRemote();
         loading = false;
     };
