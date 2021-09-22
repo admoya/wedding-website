@@ -76,6 +76,7 @@
                 <li class="nav-item"><a class="nav-link" aria-current="{path.includes('event') ? 'page' : undefined}" href="/event">event</a></li>
                 <li class="nav-item"><a class="nav-link" aria-current="{path.includes('gallery') ? 'page' : undefined}" href="/gallery">gallery</a></li>
                 <li class="nav-item"><a class="nav-link" rel=prefetch aria-current="{path.includes('updates') ? 'page' : undefined}" href="/updates">updates</a></li>
+                <li class="nav-item"><a class="nav-link" aria-current="{path.includes('rsvp') ? 'page' : undefined}" href="/rsvp">rsvp</a></li>
             </ul>
         </div>
         <h3 class="headerMessage navbar-brand mx-auto">Adrian + Jenny · 11.13.21</h3>

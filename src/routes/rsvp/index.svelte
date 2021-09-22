@@ -17,9 +17,13 @@
     })
 </script>
 
+<svelte:head>
+	<title>RSVP</title>
+</svelte:head>
+
 <h1>RSVP</h1>
 <Label for="partySearch">Search for your party</Label>
-<Input bind:value={search} autocomplete="off" id="partySearch" type="search" placeholder="Enter Your Name or RSVP Code"/>
+<Input bind:value={search} autocomplete="off" id="partySearch" type="search" placeholder="Enter your name or RSVP code"/>
 {#if search.length > 2}
     <ListGroup>
         {#each matchedGuests as guest}

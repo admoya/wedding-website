@@ -31,8 +31,11 @@
         imageSrcForModal=imgSrc;
         toggle();
     }
-
 </script>
+
+<svelte:head>
+	<title>Gallery</title>
+</svelte:head>
 
 <h1>Gallery</h1>
 <p>Here's a bunch of pictures of us, in case you don't know what we look like!</p>

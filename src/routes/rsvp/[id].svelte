@@ -10,49 +10,48 @@
     import { page } from '$app/stores';
     import GuestCard from './_guestCard.svelte';
     import { submitGuestChanges } from '../../utils';
+    import { fade } from 'svelte/transition';
+
     export let guestGroup = {};
     const { id } = $page.params;
     const { name, seats } = guestGroup;
-    let error = '';
+    let errors = [];
     let loading = false;
     const onFormSubmit = async (e) => {
         e.preventDefault();
+        errors = [];
         if (guestGroup.attending) {
                 if (seats.find((seat) => !seat.name)) {
-                error = 'Please enter a name for all your guests';
+                errors.push('Please enter a name for all your guests');
                 document.getElementById('errorAlertAnchor').scrollIntoView({ behavior: 'smooth'});
-                return;
             };
             if (seats.find((seat) => seat.attending && !seat.food)) {
                 document.getElementById('errorAlertAnchor').scrollIntoView({ behavior: 'smooth'});
-                error = 'Please enter a food preference for attending guests';
-                return;
+                errors.push('Please enter a food preference for attending guests');
             };
+            if (errors.length) return;
         };
         loading = true;
-        error = '';
         try {
             await submitGuestChanges({...guestGroup, id });
-            window.location.href = '/rsvp/confirmation';
+            window.location.href = `/rsvp/confirmation${guestGroup.attending ? '?attending' : ''}`;
         } catch (ex) {
             console.error(ex);
-            error = 'Sorry, something went wrong. Please try again later.';
+            errors.push('Sorry, something went wrong. Please try again later.');
         }
         loading = false;
-
     };
     const onGroupAttending = () =>{
         guestGroup.attending = true;
         seats.forEach(seat => {
-            if (seat.attending === undefined) {
-                seat.attending = true;
-            };
+            seat.attending = true;
         });
     };
     const onGroupNotAttending = () => {
         guestGroup.attending = false;
         seats.forEach(seat => {
             seat.attending = false;
+            seat.food = undefined;
         });
     };
 </script>
@@ -61,10 +60,21 @@
     .rsvp-form {
         text-align: center;
     }
-    :global(#rsvpSubmitBtn) {
-        background-color: mediumpurple !important;
+    :global(.btn.btn-primary) {
+        border-color: midnightblue !important;
+        background-color: midnightblue !important;
+    }
+    :global(.btn.btn-primary:hover) {
+        background-color: rgb(22, 22, 97) !important;
+    }
+    :global(.btn.btn-primary:focus) {
+        box-shadow: 0 0 0 0.25rem rgba(25, 25, 112, 25%);
     }
 </style>
+
+<svelte:head>
+	<title>RSVP</title>
+</svelte:head>
 
 <h1>RSVP</h1>
 <div class="rsvp-form">
@@ -83,29 +93,47 @@
             {#if guestGroup.attending !== undefined}
                 <br>
                 {#if guestGroup.attending }
-                <Row>
-                    <p>Geat! Please tell us a bit about each guest:</p>
-                </Row>
-                <div id="errorAlertAnchor">
-                    {#if error}
+                    <div in:fade>
                         <Row>
-                            <Col size={12}>
-                                <Alert id='errorAlert' color="danger"><p class="m-0">{error}</p></Alert>
+                            <p>Geat! Please tell us a bit about each guest:</p>
+                        </Row>
+                        <div id="errorAlertAnchor">
+                            {#each errors as error}
+                                <Row>
+                                    <Col size={12}>
+                                        <Alert id='errorAlert' color="danger"><p class="m-0">{error}</p></Alert>
+                                    </Col>
+                                </Row>
+                            {/each}
+                        </div>
+                        {#each seats as seat, i}
+                            <GuestCard bind:seat error={errors.length} index={i} />
+                        {/each}
+                        <Row class="mb-3">
+                            <Card>
+                                <CardHeader><CardTitle>Comments or Requests</CardTitle></CardHeader>
+                                <CardBody>
+                                    <Label for="notesInput">Any comment you'd like to pass along to us?</Label>
+                                    <Input id="notesInput" type="textarea" placeholder="Dietary restrictions, special requests, and so on." bind:value={guestGroup.notes}/>
+                                </CardBody>
+                            </Card>
+                        </Row>
+                        <Row>
+                            <Button disabled={loading} color="primary">Submit</Button>
+                        </Row>
+                    </div>
+                {:else}
+                    <div in:fade>
+                        <Row>
+                            <p>We're sorry to hear that! Click the button below to let us know.</p>
+                        </Row>
+                        <Row>
+                            <Col md={{size: 4, offset: 4}}>
+                                <Button class="w-100" disabled={loading} color="primary">Submit</Button>
                             </Col>
                         </Row>
-                    {/if}
-                </div>
-                {#each seats as seat, i}
-                    <GuestCard bind:seat {error} index={i} />
-                {/each}
-                {:else}
-                    <Row>
-                        <p>We're sorry to hear that! Click the button below to let us know.</p>
-                    </Row>
+                    </div>
                 {/if}
-                <Row>
-                    <Button disabled={loading} id="rsvpSubmitBtn">Submit</Button>
-                </Row>
             {/if}
 
 
