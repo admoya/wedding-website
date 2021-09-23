@@ -9,6 +9,7 @@
         NavItem,
         NavLink,
     } from 'sveltestrap/src';
+    import { browser } from '$app/env';
     let isOpen = false;
 
     function handleUpdate(event) {
@@ -16,7 +17,12 @@
     }
 
     $: isActivePage = (segment) => segment ? path.includes(segment) : path === '/';
+
+    let width;
+    $: names = (width < 350) ? 'A + J' : 'Adrian + Jenny';
 </script>
+
+<svelte:window bind:innerWidth={width}/>
 
 <style>
     :global([aria-current]) {
@@ -63,5 +69,5 @@
             <NavItem><NavLink on:click={() => isOpen = false} active={isActivePage('/rsvp')} aria-current="{isActivePage('/rsvp') ? 'page' : undefined}" href="/rsvp">rsvp</NavLink></NavItem>
         </Nav>
     </Collapse>
-    <NavbarBrand href="/"><div class="headerMessage p-2">Adrian + Jenny · 11.13.21</div></NavbarBrand>
+    <NavbarBrand href="/"><div class="headerMessage p-2">{`${names} · 11.13.21`}</div></NavbarBrand>
 </Navbar>
