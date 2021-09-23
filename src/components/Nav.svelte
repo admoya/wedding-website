@@ -9,11 +9,9 @@
         NavItem,
         NavLink,
     } from 'sveltestrap/src';
-
     let isOpen = false;
 
     function handleUpdate(event) {
-        console.log('here');
         isOpen = event.detail.isOpen;
     }
 
@@ -36,6 +34,9 @@
     }
     :global(.navContainer) {
         border-bottom: 1px solid rgba(255,62,0,0.1);
+    }
+    :global(.nav-item) {
+        width: fit-content;
     }
     .headerMessage {
         padding-top: 1rem;

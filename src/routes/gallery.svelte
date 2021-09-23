@@ -21,14 +21,14 @@
     }
 </style>
 <script>
-    import { Modal, ModalBody } from 'sveltestrap/src';
+    import { Modal } from 'sveltestrap/src';
     import { NUM_IMAGES } from '../constants';
     const imageURIs = Array(NUM_IMAGES).fill().map((_, index) => `CroppedCouplePictures/${index}.jpg`);
     let imageSrcForModal = '';
     let showModal = false;
     const toggle = () => (showModal = !showModal);
     const handleClick = (imgSrc) => {
-        imageSrcForModal=imgSrc;
+        imageSrcForModal=imgSrc.replace('Cropped', '');
         toggle();
     }
 </script>
