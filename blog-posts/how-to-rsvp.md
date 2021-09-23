@@ -1,5 +1,3 @@
-This website is going to be updated with some cool new features as soon as Adrian stops being lazy!
+Invitations have been sent out! You should be getting yours soon. When you do, you will find a QR code on the back of the RSVP card. You can scan that code to go straight to your personal RSVP page!
 
-One of those features is going to be the ability to RSVP from right here. Your _official_ wedding invitation will have the (simple) instructions on it.
-
-Check back soon, and feel free to nag Adrian about it!
+If you haven't gotten your invitation yet or you don't want to use the QR code, you can go to the [rsvp](/rsvp) page and search for your name.

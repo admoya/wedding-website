@@ -33,6 +33,10 @@
 		font-weight: 500;
 	}
 
+	.content :global(p) {
+		text-align: left;
+	}
+
 	.content :global(pre) {
 		background-color: #f9f9f9;
 		box-shadow: inset 1px 1px 5px rgba(0, 0, 0, 0.05);

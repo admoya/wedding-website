@@ -12,6 +12,10 @@ const posts = [
 		title: 'How to RSVP',
 		slug: 'how-to-rsvp'
 	},
+	{
+		title: 'A Note on Vaccinations',
+		slug: 'a-note-on-vaccinations'
+	},
 ];
 
 // posts.forEach(post => {

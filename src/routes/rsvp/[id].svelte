@@ -71,6 +71,9 @@
     :global(.btn.btn-primary:focus) {
         box-shadow: 0 0 0 0.25rem rgba(25, 25, 112, 25%);
     }
+    :global(.alert-info) {
+        background-color: mistyrose;
+    }
 </style>
 
 <svelte:head>
@@ -96,7 +99,7 @@
                 {#if guestGroup.attending }
                     <div in:fade>
                         <Row>
-                            <p>Geat! Please tell us a bit about each guest:</p>
+                            <p>Geat! Please tell us a bit about each guest.</p>
                         </Row>
                         <div id="errorAlertAnchor">
                             {#each errors as error}
@@ -107,6 +110,9 @@
                                 </Row>
                             {/each}
                         </div>
+                        <Row>
+                            <Alert color="info" dismissible>We are asking that all adult guests be vaccinated. See our thoughts <a target="_blank" href="/updates/a-note-on-vaccinations">here</a>.</Alert>
+                        </Row>
                         {#each seats as seat, i}
                             <GuestCard bind:seat error={errors.length} index={i} />
                         {/each}

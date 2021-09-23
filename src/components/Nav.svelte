@@ -57,10 +57,10 @@
     <Collapse {isOpen} navbar expand="md" on:update={handleUpdate}>
         <Nav navbar>
             <NavItem><NavLink on:click={() => isOpen = false} active={isActivePage()} aria-current="{isActivePage() ? 'page' : undefined}" href="/">home</NavLink></NavItem>
-            <NavItem><NavLink on:click={() => isOpen = false} active={isActivePage('event')} aria-current="{isActivePage('event') ? 'page' : undefined}" href="/event">event</NavLink></NavItem>
-            <NavItem><NavLink on:click={() => isOpen = false} active={isActivePage('gallery')} aria-current="{isActivePage('gallery') ? 'page' : undefined}" href="/gallery">gallery</NavLink></NavItem>
-            <NavItem><NavLink on:click={() => isOpen = false} active={isActivePage('updates')} rel=prefetch aria-current="{isActivePage('updates') ? 'page' : undefined}" href="/updates">updates</NavLink></NavItem>
-            <NavItem><NavLink on:click={() => isOpen = false} active={isActivePage('rsvp')} aria-current="{isActivePage('rsvp') ? 'page' : undefined}" href="/rsvp">rsvp</NavLink></NavItem>
+            <NavItem><NavLink on:click={() => isOpen = false} active={isActivePage('/event')} aria-current="{isActivePage('/event') ? 'page' : undefined}" href="/event">event</NavLink></NavItem>
+            <NavItem><NavLink on:click={() => isOpen = false} active={isActivePage('/gallery')} aria-current="{isActivePage('/gallery') ? 'page' : undefined}" href="/gallery">gallery</NavLink></NavItem>
+            <NavItem><NavLink on:click={() => isOpen = false} active={isActivePage('/updates')} rel=prefetch aria-current="{isActivePage('/updates') ? 'page' : undefined}" href="/updates">updates</NavLink></NavItem>
+            <NavItem><NavLink on:click={() => isOpen = false} active={isActivePage('/rsvp')} aria-current="{isActivePage('/rsvp') ? 'page' : undefined}" href="/rsvp">rsvp</NavLink></NavItem>
         </Nav>
     </Collapse>
     <NavbarBrand href="/"><div class="headerMessage p-2">Adrian + Jenny · 11.13.21</div></NavbarBrand>
