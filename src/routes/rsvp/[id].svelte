@@ -21,15 +21,16 @@
         e.preventDefault();
         errors = [];
         if (guestGroup.attending) {
-                if (seats.find((seat) => !seat.name)) {
+            if (seats.find((seat) => !seat.name)) {
                 errors.push('Please enter a name for all your guests');
-                document.getElementById('errorAlertAnchor').scrollIntoView({ behavior: 'smooth'});
             };
             if (seats.find((seat) => seat.attending && !seat.food)) {
-                document.getElementById('errorAlertAnchor').scrollIntoView({ behavior: 'smooth'});
                 errors.push('Please enter a food preference for attending guests');
             };
-            if (errors.length) return;
+            if (errors.length) {
+                document.getElementById('errorAlertAnchor').scrollIntoView({ behavior: 'smooth'});
+                return
+            };
         };
         loading = true;
         try {
@@ -110,7 +111,16 @@
                             <GuestCard bind:seat error={errors.length} index={i} />
                         {/each}
                         <Row class="mb-3">
-                            <Card>
+                            <Card class="p-0">
+                                <CardHeader><CardTitle>Contact Info</CardTitle></CardHeader>
+                                <CardBody>
+                                    <Label for="emailInput">Please provide an email address that we can use to contact you for any important updates.</Label>
+                                    <Input id="emailInput" required autocomplete="email" type="email" placeholder="someone@example.com" bind:value={guestGroup.email}/>
+                                </CardBody>
+                            </Card>
+                        </Row>
+                        <Row class="mb-3">
+                            <Card class="p-0">
                                 <CardHeader><CardTitle>Comments or Requests</CardTitle></CardHeader>
                                 <CardBody>
                                     <Label for="notesInput">Any comment you'd like to pass along to us?</Label>

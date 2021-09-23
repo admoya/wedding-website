@@ -45,7 +45,7 @@
 <Row class="mb-3">
     <Card class="p-0">
         <CardHeader>
-            <CardTitle>
+            <CardTitle class={`${error && !seat.name ? 'text-danger' : ''}`}>
                 {#if editingName}
                     <Input
                         class="border-top-0 border-start-0 border-end-0 d-inline w-auto"
@@ -80,7 +80,7 @@
             <Row>
                 <Col>
                     <Label for="guestAttendanceBtnGroup">Attending?</Label>
-                    <ButtonGroup id="guestAttendanceBtnGroup" role="group" class="w-100">
+                    <ButtonGroup id="guestAttendanceBtnGroup" role="group" class="w-100 mb-2">
                         <Button type="button" outline active={seat.attending} color="primary" on:click={() => (seat.attending = true)}>Yes</Button>
                         <Button type="button" outline active={seat.attending === false} color="secondary" on:click={() => {seat.attending = false; seat.food = undefined}}>No</Button>
                     </ButtonGroup>
