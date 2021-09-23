@@ -39,7 +39,6 @@
         width: fit-content;
     }
     .headerMessage {
-        padding-top: 1rem;
         font-family: "Brush Script MT", cursive;
         font-size: 1.5rem;
         color: black;
@@ -49,6 +48,7 @@
             position: absolute;
             left: 50%;
             transform: translateX(-50%);
+            top: 0;
         }
 </style>
 
@@ -63,5 +63,5 @@
             <NavItem><NavLink on:click={() => isOpen = false} active={isActivePage('rsvp')} aria-current="{isActivePage('rsvp') ? 'page' : undefined}" href="/rsvp">rsvp</NavLink></NavItem>
         </Nav>
     </Collapse>
-    <NavbarBrand href="/"><div class="headerMessage">Adrian + Jenny · 11.13.21</div></NavbarBrand>
+    <NavbarBrand href="/"><div class="headerMessage p-2">Adrian + Jenny · 11.13.21</div></NavbarBrand>
 </Navbar>
