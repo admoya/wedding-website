@@ -17,6 +17,8 @@
         guests = await getFullGuestList({fetch});
         remoteGuests = cloneDeep(guests);
     }
+    $: respondedGuests = guests.filter(g => g.attending !== undefined);
+    $: nonRespondedGuests = guests.filter(g => g.attending === undefined);
 </script>
 
 
@@ -26,6 +28,11 @@
     console.log(JSON.stringify(guests, null, 4));
     console.log(JSON.stringify(remoteGuests, null, 4));
 }}>Debug</button>
-{#each guests as guest, index}
+<h3>Responded:</h3>
+{#each respondedGuests as guest, index}
+    <GuestCard {guest} {index} {refreshRemote} {remoteGuests} />
+{/each}
+<h3 class="mt-4">Not Responded:</h3>
+{#each nonRespondedGuests as guest, index}
     <GuestCard {guest} {index} {refreshRemote} {remoteGuests} />
 {/each}
