@@ -72,7 +72,7 @@
         box-shadow: 0 0 0 0.25rem rgba(25, 25, 112, 25%);
     }
     :global(.alert-info) {
-        background-color: mistyrose;
+        background-color: mistyrose !important;
     }
 </style>
 
