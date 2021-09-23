@@ -39,8 +39,8 @@
         } catch (ex) {
             console.error(ex);
             errors.push('Sorry, something went wrong. Please try again later.');
+            loading = false;
         }
-        loading = false;
     };
     const onGroupAttending = () =>{
         guestGroup.attending = true;
