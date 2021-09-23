@@ -10,7 +10,7 @@
 
 <script>
     export let guests;
-    import { Input, Label, ListGroup, ListGroupItem } from 'sveltestrap';
+    import { Input, Label, ListGroup, ListGroupItem } from 'sveltestrap/src';
     let search = '';
     $: matchedGuests = guests.filter(({id, name}) => {
         return id.includes(search) || name.toLowerCase().includes(search.toLowerCase());

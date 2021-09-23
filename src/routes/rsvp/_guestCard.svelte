@@ -1,5 +1,5 @@
 <script>
-    import { Label, Col, Row, ButtonGroup, Button, Card, CardHeader, CardTitle, CardBody, Input } from 'sveltestrap';
+    import { Label, Col, Row, ButtonGroup, Button, Card, CardHeader, CardTitle, CardBody, Input } from 'sveltestrap/src';
     export let seat;
     export let error;
     export let index;

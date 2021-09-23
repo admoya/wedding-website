@@ -1,27 +1,31 @@
 <script>
     export let path;
+    import {
+        Collapse,
+        Navbar,
+        NavbarToggler,
+        NavbarBrand,
+        Nav,
+        NavItem,
+        NavLink,
+    } from 'sveltestrap/src';
+
+    let isOpen = false;
+
+    function handleUpdate(event) {
+        console.log('here');
+        isOpen = event.detail.isOpen;
+    }
+
+    $: isActivePage = (segment) => segment ? path.includes(segment) : path === '/';
 </script>
 
 <style>
-    ul {
-        margin: 0;
-        padding: 0;
-    }
-    /* clearfix */
-    ul::after {
-        content: '';
-        display: block;
-        clear: both;
-    }
-    li {
-        display: block;
-        float: left;
-    }
-    [aria-current] {
+    :global([aria-current]) {
         position: relative;
         display: inline-block;
     }
-    [aria-current]::after {
+    :global([aria-current]::after) {
         position: absolute;
         content: '';
         width: calc(100% - 1em);
@@ -30,55 +34,33 @@
         display: block;
         bottom: -1px;
     }
-    a {
-        text-decoration: none;
-        padding: 1em 0.5em;
-        display: block;
-    }
-    .navContainer {
-        /* display: flex;
-        flex-direction: row;
-        align-items: left; */
+    :global(.navContainer) {
         border-bottom: 1px solid rgba(255,62,0,0.1);
-        /* font-weight: 300; */
-        /* padding: 0 1em; */
     }
     .headerMessage {
-        /* position: absolute;
-        margin-left: auto;
-        margin-right: auto; */
-        /* left: 0;
-        right: 0; */
-        /* text-align: center; */
         padding-top: 1rem;
         font-family: "Brush Script MT", cursive;
         font-size: 1.5rem;
-        /* z-index: -1; */
+        color: black;
     }
-    @media (min-width: 768px) {
-    .navbar-brand
+    :global(.navbar-brand)
         {
             position: absolute;
             left: 50%;
             transform: translateX(-50%);
         }
-    }
 </style>
 
-<div class="navContainer">
-    <nav class="navbar navbar-expand-md navbar-light">
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item"><a class="nav-link" aria-current="{path === '/' ? 'page' : undefined}" href="/">home</a></li>
-                <li class="nav-item"><a class="nav-link" aria-current="{path.includes('event') ? 'page' : undefined}" href="/event">event</a></li>
-                <li class="nav-item"><a class="nav-link" aria-current="{path.includes('gallery') ? 'page' : undefined}" href="/gallery">gallery</a></li>
-                <li class="nav-item"><a class="nav-link" rel=prefetch aria-current="{path.includes('updates') ? 'page' : undefined}" href="/updates">updates</a></li>
-                <li class="nav-item"><a class="nav-link" aria-current="{path.includes('rsvp') ? 'page' : undefined}" href="/rsvp">rsvp</a></li>
-            </ul>
-        </div>
-        <h3 class="headerMessage navbar-brand mx-auto">Adrian + Jenny · 11.13.21</h3>
-    </nav>
-</div>
+<Navbar class="navContainer" color="white" light expand="md">
+    <NavbarToggler on:click={() => (isOpen = !isOpen)} />
+    <Collapse {isOpen} navbar expand="md" on:update={handleUpdate}>
+        <Nav navbar>
+            <NavItem><NavLink on:click={() => isOpen = false} active={isActivePage()} aria-current="{isActivePage() ? 'page' : undefined}" href="/">home</NavLink></NavItem>
+            <NavItem><NavLink on:click={() => isOpen = false} active={isActivePage('event')} aria-current="{isActivePage('event') ? 'page' : undefined}" href="/event">event</NavLink></NavItem>
+            <NavItem><NavLink on:click={() => isOpen = false} active={isActivePage('gallery')} aria-current="{isActivePage('gallery') ? 'page' : undefined}" href="/gallery">gallery</NavLink></NavItem>
+            <NavItem><NavLink on:click={() => isOpen = false} active={isActivePage('updates')} rel=prefetch aria-current="{isActivePage('updates') ? 'page' : undefined}" href="/updates">updates</NavLink></NavItem>
+            <NavItem><NavLink on:click={() => isOpen = false} active={isActivePage('rsvp')} aria-current="{isActivePage('rsvp') ? 'page' : undefined}" href="/rsvp">rsvp</NavLink></NavItem>
+        </Nav>
+    </Collapse>
+    <NavbarBrand href="/"><div class="headerMessage">Adrian + Jenny · 11.13.21</div></NavbarBrand>
+</Navbar>

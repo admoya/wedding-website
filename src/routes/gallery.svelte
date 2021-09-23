@@ -21,7 +21,7 @@
     }
 </style>
 <script>
-    import { Modal, ModalBody } from 'sveltestrap';
+    import { Modal, ModalBody } from 'sveltestrap/src';
     import { NUM_IMAGES } from '../constants';
     const imageURIs = Array(NUM_IMAGES).fill().map((_, index) => `CroppedCouplePictures/${index}.jpg`);
     let imageSrcForModal = '';

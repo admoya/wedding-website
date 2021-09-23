@@ -6,7 +6,7 @@
 </script>
 
 <script>
-    import { Form, Label, Container, Col, Row, ButtonGroup, Button, Input, Alert, Card, CardHeader, CardTitle, CardBody } from 'sveltestrap';
+    import { Form, Label, Container, Col, Row, ButtonGroup, Button, Input, Alert, Card, CardHeader, CardTitle, CardBody } from 'sveltestrap/src';
     import { page } from '$app/stores';
     import GuestCard from './_guestCard.svelte';
     import { submitGuestChanges } from '../../utils';

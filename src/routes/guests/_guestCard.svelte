@@ -14,7 +14,7 @@
         Input,
         ButtonGroup,
         Button,
-    } from 'sveltestrap';
+    } from 'sveltestrap/src';
     import { submitGuestChanges } from '../../utils';
 
     export let guest = {};
