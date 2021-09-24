@@ -118,6 +118,10 @@
                         <Button type="button" outline active={guest.attending === undefined} color="secondary" on:click={() => (guest.attending = undefined)}>Unknown</Button>
                     </ButtonGroup>
                 </Col>
+                <Col class="d-inline-flex align-items-center">
+                    <Label class="me-2" for={`guest-${index}-email`}>Email:</Label>
+                    <Input id={`guest-${index}-email`} bind:value={guest.email}/>
+                </Col>
             </Row>
             <Row class="pt-1">
                 <Col class="d-inline-flex">
