@@ -17,6 +17,7 @@
 
 <script>
 	export let post;
+	import { Card, CardBody } from 'sveltestrap/src'
 </script>
 
 <style>
@@ -66,5 +67,9 @@
 <h1>{post.title}</h1>
 
 <div class="content">
-	{@html post.content}
+	<Card>
+		<CardBody>
+			{@html post.content}
+		</CardBody>
+	</Card>
 </div>
