@@ -146,7 +146,7 @@
                             <ButtonGroup id={`guest#${index}-seat#${i}-food`} role="group" class="w-100">
                                 <Button type="button" disabled={seat.attending === false} outline active={seat.food === 'Beef'} on:click={() => (seat.food = 'Beef')}>Beef</Button>
                                 <Button type="button" disabled={seat.attending === false} outline active={seat.food === 'Chicken'} on:click={() => (seat.food = 'Chicken')}>Chicken</Button>
-                                <Button type="button" disabled={seat.attending === false} outline active={seat.food === 'Vegitarian'} on:click={() => (seat.food = 'Vegitarian')}>Vegitarian</Button>
+                                <Button type="button" disabled={seat.attending === false} outline active={seat.food === 'Vegetarian'} on:click={() => (seat.food = 'Vegetarian')}>Vegetarian</Button>
                             </ButtonGroup>
                         </Col>
                         <Col xs={{ size: 1 }}>

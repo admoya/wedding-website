@@ -1,7 +1,16 @@
 <script context="module">
     import { getFullGuestList } from '../../utils';
     export async function load({ fetch }) {
-        return { props: { guests: await getFullGuestList({fetch}) } }
+        try {
+            const authorized = await fetch("/guests/authorize");
+            if (authorized.status !== 200) {
+                return { status: 302, redirect: "/guests/adminAuth" };
+            }
+            return { props: { guests: await getFullGuestList({fetch}) } }
+        } catch (ex) {
+            return { error: ex };
+        }
+
     }
 </script>
 

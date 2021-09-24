@@ -40,6 +40,7 @@
     }
     :global(.navContainer) {
         border-bottom: 1px solid rgba(255,62,0,0.1);
+        min-height: 57px;
     }
     :global(.nav-item) {
         width: fit-content;
