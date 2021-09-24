@@ -3,6 +3,7 @@ img {
     text-align: center;
     margin: auto;
     object-fit: contain;
+    vertical-align: top;
 }
 .img-container {
     max-height: 560px;
@@ -20,8 +21,6 @@ img {
     const module = await import('svelte-carousel');
     Carousel = module.default;
     });
-
-    const randomImage=Math.floor(Math.random() * NUM_IMAGES-1);
     const imageURIs = shuffle(Array(NUM_IMAGES).fill().map((_, index) => `CroppedCouplePictures/${index}.jpg`));
 </script>
 
@@ -45,7 +44,7 @@ img {
     {#each imageURIs as src, imageIndex (src)}
         <div class="img-container">
             {#if loaded.includes(imageIndex)}
-                <img src={src} class="d-block w-100 h-100" alt={`${src} ${imageIndex + 1}`} />
+                <img src={src} class="d-block w-100" alt={`${src} ${imageIndex + 1}`} />
             {/if}
         </div>
     {/each}
