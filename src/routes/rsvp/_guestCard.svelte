@@ -90,7 +90,7 @@
                     <ButtonGroup id="foodPreferenceBtnGroup" role="group" class="w-100">
                         <Button type="button" class="foodBtn" disabled={!seat.attending} outline active={seat.food === 'Beef'} color={seat.attending && error && !seat.food ? 'danger' : 'primary'} on:click={() => (seat.food = 'Beef')}>Beef</Button>
                         <Button type="button" class="foodBtn" disabled={!seat.attending} outline active={seat.food === 'Chicken'} color={seat.attending && error && !seat.food ? 'danger' : 'primary'} on:click={() => (seat.food = 'Chicken')}>Chicken</Button>
-                        <Button type="button" class="foodBtn" disabled={!seat.attending} outline active={seat.food === 'Vegitarian'} color={seat.attending && error && !seat.food ? 'danger' : 'primary'} on:click={() => (seat.food = 'Vegitarian')}>Vegitarian</Button>
+                        <Button type="button" class="foodBtn" disabled={!seat.attending} outline active={seat.food === 'Vegetarian'} color={seat.attending && error && !seat.food ? 'danger' : 'primary'} on:click={() => (seat.food = 'Vegetarian')}>Vegetarian</Button>
                     </ButtonGroup>
                 </Col>
             </Row>

@@ -99,7 +99,7 @@
                 {#if guestGroup.attending }
                     <div in:fade>
                         <Row>
-                            <p>Geat! Please tell us a bit about each guest.</p>
+                            <p>Great! Please tell us a bit about each guest.</p>
                         </Row>
                         <div id="errorAlertAnchor">
                             {#each errors as error}
@@ -111,7 +111,9 @@
                             {/each}
                         </div>
                         <Row>
-                            <Alert color="info" dismissible>We are asking that all adult guests be vaccinated. See our thoughts <a target="_blank" href="/updates/a-note-on-vaccinations">here</a>.</Alert>
+                            <Alert color="info" dismissible>
+                                <p class="m-0">Guests must provide a negative COVID test. For more information, click <a target="_blank" href="/updates/a-note-about-covid">here</a>.</p>
+                            </Alert>
                         </Row>
                         {#each seats as seat, i}
                             <GuestCard bind:seat error={errors.length} index={i} />
@@ -129,7 +131,7 @@
                             <Card class="p-0">
                                 <CardHeader><CardTitle>Comments or Requests</CardTitle></CardHeader>
                                 <CardBody>
-                                    <Label for="notesInput">Any comment you'd like to pass along to us?</Label>
+                                    <Label for="notesInput">Any comments you'd like to pass along to us?</Label>
                                     <Input id="notesInput" type="textarea" placeholder="Dietary restrictions, special requests, and so on." bind:value={guestGroup.notes}/>
                                 </CardBody>
                             </Card>

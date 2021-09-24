@@ -13,8 +13,8 @@ const posts = [
 		slug: 'how-to-rsvp'
 	},
 	{
-		title: 'A Note on Vaccinations',
-		slug: 'a-note-on-vaccinations'
+		title: 'A Note About Covid',
+		slug: 'a-note-about-covid'
 	},
 ];
 
