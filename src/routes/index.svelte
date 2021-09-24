@@ -42,7 +42,7 @@ img {
   let:loaded
 >
     {#each imageURIs as src, imageIndex (src)}
-        <div class="img-container">
+        <div class="img-container mt-2">
             {#if loaded.includes(imageIndex)}
                 <img src={src} class="d-block w-100" alt={`${src} ${imageIndex + 1}`} />
             {/if}
