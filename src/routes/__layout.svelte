@@ -11,10 +11,12 @@
 		margin: 0 auto;
 		box-sizing: border-box;
 	}
-	:global(:root){
-		background-image: url("/pinkwave.jpg");
-		background-repeat: no-repeat;
-    	background-size: cover;
+	:global(html){
+		background: url("/pinkwave.jpg") no-repeat center center fixed;
+		-webkit-background-size: cover;
+		-moz-background-size: cover;
+		-o-background-size: cover;
+		background-size: cover;
 	}
 	.mainContentScrollWrapper {
 		flex-grow: 1;
