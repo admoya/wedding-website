@@ -123,6 +123,10 @@
                     <Input id={`guest-${index}-email`} bind:value={guest.email}/>
                 </Col>
             </Row>
+            <Row>
+                <Label for={`guest-${index}-note`}>Notes:</Label>
+                <Input id={`guest-${index}-note`} type="textarea" bind:value={guest.notes}/>
+            </Row>
             <Row class="pt-1">
                 <Col class="d-inline-flex">
                     <h4 class="mb-0">{`Seats (${guest.seats.length}): `}</h4>
