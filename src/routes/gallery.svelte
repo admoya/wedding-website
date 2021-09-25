@@ -22,8 +22,9 @@
 </style>
 <script>
     import { Modal } from 'sveltestrap/src';
-    import { NUM_IMAGES } from '../constants';
+    import { NUM_IMAGES, NUM_PHOTOSHOOP_IMAGES } from '../constants';
     const imageURIs = Array(NUM_IMAGES).fill().map((_, index) => `CompressedCroppedCouplePictures/${index}.jpg`);
+    const photoshootURIs = Array(NUM_PHOTOSHOOP_IMAGES).fill().map((_, index) => `CompressedCroppedCouplePictures/Photoshoot/${index}.jpg`);
     let imageSrcForModal = '';
     let showModal = false;
     const toggle = () => (showModal = !showModal);
@@ -40,9 +41,18 @@
 <h1>Gallery</h1>
 <p>Here's a bunch of pictures of us, in case you don't know what we look like!</p>
 <div class="galleryContainer d-flex flex-wrap justify-content-around">
-    {#each imageURIs as imgSrc, i}
+    <h2 class="w-100 text-center">Engagement Photos</h2>
+    <br>
+    {#each photoshootURIs as imgSrc, i}
     <div class="imageContainer" on:click={() => {handleClick(imgSrc)}} data-toggle="modal" data-target="#showcaseModal">
         <img class="img-fluid rounded" src={imgSrc} alt={`Picture ${i+1} of Adrian and Jenny`}>
+    </div>
+    {/each}
+    <h2 class="w-100 text-center mt-4">Random Memories</h2>
+    <br>
+    {#each imageURIs as imgSrc, i}
+    <div class="imageContainer" on:click={() => {handleClick(imgSrc)}} data-toggle="modal" data-target="#showcaseModal">
+        <img class="img-fluid rounded" loading="lazy" src={imgSrc} alt={`Picture ${i+1} of Adrian and Jenny`}>
     </div>
     {/each}
 </div>

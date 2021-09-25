@@ -16,4 +16,6 @@ EXPOSE 24678
 # RUN su node -c "source /usr/local/share/nvm/nvm.sh && nvm install ${EXTRA_NODE_VERSION}"
 
 # [Optional] Uncomment if you want to install more global node modules
-# RUN sudo -u node npm install -g <your-package-list-here>
+RUN sudo -u node npm install -g netlify-cli
+RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
+RUN sudo apt-get install git-lfs
