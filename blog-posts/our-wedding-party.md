@@ -56,7 +56,7 @@ Please let us introduce our wedding party! We are so blessed to have so many lov
 </div>
 
 ## The Officiant
-We are also honored to be married by a close friend that has been with us through much of our journey.
+We are also honored to be married by a close friend that has been with us through much of our journey and whom we love dearly!
 <div class="d-inline-flex justify-content-center w-100">
     <figure>
         <img class="img-fluid" src="/static/wedding-party/fuen.jpg" alt="Daniel Fuenmayor" />
