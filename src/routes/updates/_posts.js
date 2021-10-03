@@ -9,13 +9,25 @@
 
 const posts = [
 	{
+		title: 'Our Story',
+		slug: 'our-story'
+	},
+	{
 		title: 'How to RSVP',
 		slug: 'how-to-rsvp'
+	},
+	{
+		title: 'Our Wedding Party',
+		slug: 'our-wedding-party'
 	},
 	{
 		title: 'A Note About Covid',
 		slug: 'a-note-about-covid'
 	},
+	{
+		title: 'Gifts',
+		slug: 'gifts'
+	}
 ];
 
 // posts.forEach(post => {
