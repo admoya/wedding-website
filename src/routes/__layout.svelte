@@ -28,12 +28,12 @@
 	.pageWrapper {
 		display: flex;
 		flex-direction: column;
-		height: 100vh;
+		/* height: 100vh; TODO: This breaks nav expansion but is necessary for sticking nav to top. */
 	}
 </style>
 
 <div class="pageWrapper">
-	<Nav path={$page.path}/>
+	<Nav path={$page.path} />
 	<div class='mainContentScrollWrapper'>
 		<main>
 			<slot></slot>
