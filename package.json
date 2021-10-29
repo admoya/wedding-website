@@ -12,23 +12,24 @@
     "compile-markdown": "./compile-markdown.sh"
   },
   "devDependencies": {
-    "@sveltejs/adapter-netlify": "^1.0.0-next.31",
-    "@sveltejs/kit": "^1.0.0-next.172",
-    "@typescript-eslint/eslint-plugin": "^4.31.2",
-    "@typescript-eslint/parser": "^4.31.2",
+    "@sveltejs/adapter-netlify": "^1.0.0-next.35",
+    "@sveltejs/kit": "^1.0.0-next.190",
+    "@typescript-eslint/eslint-plugin": "^4.33.0",
+    "@typescript-eslint/parser": "^4.33.0",
     "eslint": "^7.22.0",
     "eslint-config-prettier": "^8.1.0",
     "eslint-plugin-svelte3": "^3.2.0",
+    "form-data": "^4.0.0",
     "lodash-es": "^4.17.21",
-    "marked": "^3.0.4",
+    "marked": "^3.0.8",
     "prettier": "~2.2.1",
     "prettier-plugin-svelte": "^2.2.0",
-    "svelte": "^3.43.0",
-    "svelte-check": "^2.2.6",
-    "svelte-preprocess": "^4.9.5",
+    "svelte": "^3.44.0",
+    "svelte-check": "^2.2.7",
+    "svelte-preprocess": "^4.9.8",
     "sveltestrap": "^5.6.3",
     "tslib": "^2.0.0",
-    "typescript": "^4.0.0"
+    "typescript": "^4.4.4"
   },
   "type": "module",
   "dependencies": {}
