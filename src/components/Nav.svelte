@@ -15,12 +15,12 @@
     function handleUpdate(event) {
         isOpen = event.detail.isOpen;
     }
-    
+
     $: isActivePage = (segment) => segment ? path.includes(segment) : path === '/';
 
     let width;
     $: names = (width < 350) ? 'A + J' : 'Adrian + Jenny';
-    const routes = ['event', 'gallery', 'updates', 'playlist', 'rsvp'];
+    const routes = ['event', 'gallery', 'updates', 'playlist'];
 </script>
 
 <svelte:window bind:innerWidth={width}/>

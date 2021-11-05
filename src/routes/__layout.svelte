@@ -18,13 +18,13 @@
 		-o-background-size: cover;
 		background-size: cover;
 	}
-	.mainContentScrollWrapper {
+	/* .mainContentScrollWrapper {
 		flex-grow: 1;
 		overflow-y: auto;
 		width: 100vw;
 		max-width: 100vw;
 		scroll-behavior: smooth;
-	}
+	} */
 	.pageWrapper {
 		display: flex;
 		flex-direction: column;
